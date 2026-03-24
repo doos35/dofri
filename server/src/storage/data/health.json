@@ -1,0 +1,128 @@
+[
+  {
+    "linkId": "dofri-0002-4000-8000-000000000002",
+    "status": "dead",
+    "httpCode": null,
+    "responseTimeMs": 72,
+    "lastCheckedAt": "2026-03-24T09:45:00.976Z"
+  },
+  {
+    "linkId": "dofri-0001-4000-8000-000000000001",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 79,
+    "lastCheckedAt": "2026-03-24T09:45:00.979Z"
+  },
+  {
+    "linkId": "dofri-0005-4000-8000-000000000005",
+    "status": "dead",
+    "httpCode": null,
+    "responseTimeMs": 138,
+    "lastCheckedAt": "2026-03-24T09:45:01.047Z"
+  },
+  {
+    "linkId": "dofri-0007-4000-8000-000000000007",
+    "status": "dead",
+    "httpCode": null,
+    "responseTimeMs": 200,
+    "lastCheckedAt": "2026-03-24T09:45:01.177Z"
+  },
+  {
+    "linkId": "dofri-0003-4000-8000-000000000003",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 377,
+    "lastCheckedAt": "2026-03-24T09:45:01.282Z"
+  },
+  {
+    "linkId": "dofri-0009-4000-8000-000000000009",
+    "status": "dead",
+    "httpCode": null,
+    "responseTimeMs": 400,
+    "lastCheckedAt": "2026-03-24T09:45:01.453Z"
+  },
+  {
+    "linkId": "dofri-0010-4000-8000-000000000010",
+    "status": "dead",
+    "httpCode": null,
+    "responseTimeMs": 412,
+    "lastCheckedAt": "2026-03-24T09:45:01.469Z"
+  },
+  {
+    "linkId": "dofri-0006-4000-8000-000000000006",
+    "status": "dead",
+    "httpCode": null,
+    "responseTimeMs": 535,
+    "lastCheckedAt": "2026-03-24T09:45:01.511Z"
+  },
+  {
+    "linkId": "dofri-0008-4000-8000-000000000008",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 473,
+    "lastCheckedAt": "2026-03-24T09:45:01.520Z"
+  },
+  {
+    "linkId": "dofri-0004-4000-8000-000000000004",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 689,
+    "lastCheckedAt": "2026-03-24T09:45:01.596Z"
+  },
+  {
+    "linkId": "dofri-0012-4000-8000-000000000012",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 491,
+    "lastCheckedAt": "2026-03-24T09:45:01.670Z"
+  },
+  {
+    "linkId": "dofri-0014-4000-8000-000000000014",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 239,
+    "lastCheckedAt": "2026-03-24T09:45:01.694Z"
+  },
+  {
+    "linkId": "dofri-0011-4000-8000-000000000011",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 543,
+    "lastCheckedAt": "2026-03-24T09:45:01.720Z"
+  },
+  {
+    "linkId": "dofri-0017-4000-8000-000000000017",
+    "status": "dead",
+    "httpCode": 410,
+    "responseTimeMs": 132,
+    "lastCheckedAt": "2026-03-24T09:45:01.808Z"
+  },
+  {
+    "linkId": "dofri-0018-4000-8000-000000000018",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 312,
+    "lastCheckedAt": "2026-03-24T09:45:02.007Z"
+  },
+  {
+    "linkId": "dofri-0015-4000-8000-000000000015",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 636,
+    "lastCheckedAt": "2026-03-24T09:45:02.105Z"
+  },
+  {
+    "linkId": "dofri-0020-4000-8000-000000000020",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 357,
+    "lastCheckedAt": "2026-03-24T09:45:02.165Z"
+  },
+  {
+    "linkId": "dofri-0019-4000-8000-000000000019",
+    "status": "ok",
+    "httpCode": 200,
+    "responseTimeMs": 542,
+    "lastCheckedAt": "2026-03-24T09:45:02.242Z"
+  }
+]

@@ -1,0 +1,25 @@
+# Dépendances
+node_modules/
+
+# Build
+dist/
+
+# Variables d'environnement — NE JAMAIS committer
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Vite
+client/.vite/

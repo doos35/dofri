@@ -1,0 +1,10 @@
+# DoFri - Portail de liens personnel
+# Bloquer l'indexation (portail privé)
+User-agent: *
+Disallow: /
+
+# Si tu veux autoriser l'indexation de la page d'accueil uniquement, remplace par :
+# User-agent: *
+# Allow: /$
+# Disallow: /admin
+# Disallow: /login
