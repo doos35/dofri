@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npx tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/storage/data && cp src/storage/data/links.json dist/storage/data/links.json",
     "start": "node dist/index.js"
   },
   "dependencies": {
