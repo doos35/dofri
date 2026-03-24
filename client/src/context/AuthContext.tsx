@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
@@ -26,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    axios.get('/api/auth/me', {
+    axios.get(`${BASE_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
@@ -44,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const login = useCallback(async (user: string, password: string) => {
-    const { data } = await axios.post('/api/auth/login', { username: user, password });
+    const { data } = await axios.post(`${BASE_URL}/auth/login`, { username: user, password });
     setToken(data.token);
     setUsername(data.username);
     localStorage.setItem('lp_token', data.token);
