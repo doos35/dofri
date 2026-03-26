@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Shield, ShieldBan, X, Monitor, Smartphone, Flag } from 'lucide-react';
+import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Heart, Shield, ShieldBan, X, Monitor, Smartphone, Flag, ChevronDown } from 'lucide-react';
 import { useLinksContext } from '../context/LinksContext';
 import { useAuth } from '../context/AuthContext';
 import LinkCard from '../components/links/LinkCard';
@@ -9,7 +9,11 @@ import CategoryFilter from '../components/search/CategoryFilter';
 import TagFilter from '../components/search/TagFilter';
 import SortSelect from '../components/search/SortSelect';
 import Modal from '../components/ui/Modal';
+import ToastContainer from '../components/ui/Toast';
+import BackToTop from '../components/ui/BackToTop';
 import LinkForm from '../admin/LinkForm';
+import { useToast } from '../hooks/useToast';
+import { useVisitorFavorites } from '../hooks/useVisitorFavorites';
 import { Link as LinkType, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
 
@@ -34,9 +38,12 @@ export default function HomePage() {
   } = useLinksContext();
 
   const { isAuthenticated } = useAuth();
+  const { toasts, addToast, dismissToast } = useToast();
+  const { isFavorite: isVisitorFav, toggleFavorite: toggleVisitorFav } = useVisitorFavorites();
   const [vpnBannerDismissed, setVpnBannerDismissed] = useState(false);
   const [adblockBannerDismissed, setAdblockBannerDismissed] = useState(false);
   const [editLink, setEditLink] = useState<LinkType | null>(null);
+  const [visibleCount, setVisibleCount] = useState(12);
 
   const handleEdit = isAuthenticated ? (link: LinkType) => setEditLink(link) : undefined;
 
@@ -45,7 +52,13 @@ export default function HomePage() {
     await api.updateLink(editLink.id, data);
     setEditLink(null);
     await refreshLinks();
+    addToast('Lien modifié avec succès');
   };
+
+  const scrollToCategory = useCallback((cat: string) => {
+    const el = document.getElementById(`cat-${cat}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   // Stats
   const totalLinks = links.length;
@@ -53,9 +66,12 @@ export default function HomePage() {
   const slowCount = links.filter(l => healthStatuses.get(l.id)?.status === 'slow').length;
   const deadCount = links.filter(l => healthStatuses.get(l.id)?.status === 'dead').length;
 
-  // Favorites
+  // Admin favorites
   const favorites = links.filter(l => l.favorite);
   const nonFavorites = links.filter(l => !l.favorite);
+
+  // Visitor favorites
+  const visitorFavLinks = links.filter(l => isVisitorFav(l.id));
 
   // Group by category if no filter active
   const grouped = !activeCategory && !searchTerm && activeTags.length === 0 && !sortBy;
@@ -279,7 +295,38 @@ export default function HomePage() {
           </motion.div>
         ) : (
           <div className="space-y-10">
-            {/* Favorites section */}
+            {/* Visitor favorites section */}
+            {visitorFavLinks.length > 0 && grouped && (
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                layout
+              >
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-rose-500 fill-rose-500" />
+                  Mes favoris
+                  <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({visitorFavLinks.length})</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {visitorFavLinks.map((link, idx) => (
+                    <LinkCard
+                      key={link.id}
+                      link={link}
+                      health={healthStatuses.get(link.id)}
+                      rating={ratings.get(link.id)}
+                      onRatingChange={refreshRatings}
+                      onEdit={handleEdit}
+                      onToast={addToast}
+                      isVisitorFav={true}
+                      onToggleVisitorFav={toggleVisitorFav}
+                      index={idx}
+                    />
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
+            {/* Admin favorites section */}
             {favorites.length > 0 && grouped && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -300,6 +347,9 @@ export default function HomePage() {
                       rating={ratings.get(link.id)}
                       onRatingChange={refreshRatings}
                       onEdit={handleEdit}
+                      onToast={addToast}
+                      isVisitorFav={isVisitorFav(link.id)}
+                      onToggleVisitorFav={toggleVisitorFav}
                       index={idx}
                     />
                   ))}
@@ -313,11 +363,16 @@ export default function HomePage() {
                 {Object.entries(categoryGroups).map(([cat, catLinks]) => (
                   <motion.section
                     key={cat}
+                    id={`cat-${cat}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     layout
+                    className="scroll-mt-24"
                   >
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <h3
+                      className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                      onClick={() => scrollToCategory(cat)}
+                    >
                       <div className="w-2 h-8 rounded-full gradient-bg" />
                       {cat}
                       <span className="text-sm font-normal text-gray-400 dark:text-gray-500">({catLinks.length})</span>
@@ -331,6 +386,9 @@ export default function HomePage() {
                           rating={ratings.get(link.id)}
                           onRatingChange={refreshRatings}
                           onEdit={handleEdit}
+                          onToast={addToast}
+                          isVisitorFav={isVisitorFav(link.id)}
+                          onToggleVisitorFav={toggleVisitorFav}
                           index={idx}
                         />
                       ))}
@@ -339,21 +397,39 @@ export default function HomePage() {
                 ))}
               </AnimatePresence>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <AnimatePresence>
-                  {links.map((link, idx) => (
-                    <LinkCard
-                      key={link.id}
-                      link={link}
-                      health={healthStatuses.get(link.id)}
-                      rating={ratings.get(link.id)}
-                      onRatingChange={refreshRatings}
-                      onEdit={handleEdit}
-                      index={idx}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <AnimatePresence>
+                    {links.slice(0, visibleCount).map((link, idx) => (
+                      <LinkCard
+                        key={link.id}
+                        link={link}
+                        health={healthStatuses.get(link.id)}
+                        rating={ratings.get(link.id)}
+                        onRatingChange={refreshRatings}
+                        onEdit={handleEdit}
+                        onToast={addToast}
+                        isVisitorFav={isVisitorFav(link.id)}
+                        onToggleVisitorFav={toggleVisitorFav}
+                        index={idx}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+                {links.length > visibleCount && (
+                  <div className="flex justify-center mt-8">
+                    <motion.button
+                      onClick={() => setVisibleCount((prev) => prev + 12)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all shadow-sm hover:shadow-md"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                      Voir plus ({links.length - visibleCount} restant{links.length - visibleCount > 1 ? 's' : ''})
+                    </motion.button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -368,6 +444,9 @@ export default function HomePage() {
           onCancel={() => setEditLink(null)}
         />
       </Modal>
+
+      <BackToTop />
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

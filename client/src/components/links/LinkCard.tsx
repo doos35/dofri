@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Globe, Star, MousePointerClick, Monitor, Flag, Pencil } from 'lucide-react';
+import { ExternalLink, Globe, Star, Heart, MousePointerClick, Monitor, Flag, Pencil } from 'lucide-react';
 import { Link, HealthStatus, RatingSummary } from '../../types';
 import StatusBadge from '../ui/StatusBadge';
 import StarRating from '../ui/StarRating';
@@ -14,10 +14,13 @@ interface LinkCardProps {
   rating?: RatingSummary;
   onRatingChange?: () => void;
   onEdit?: (link: Link) => void;
+  onToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
+  isVisitorFav?: boolean;
+  onToggleVisitorFav?: (linkId: string) => void;
   index?: number;
 }
 
-export default function LinkCard({ link, health, rating, onRatingChange, onEdit, index = 0 }: LinkCardProps) {
+export default function LinkCard({ link, health, rating, onRatingChange, onEdit, onToast, isVisitorFav, onToggleVisitorFav, index = 0 }: LinkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hasHovered, setHasHovered] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -43,6 +46,7 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
     try {
       await api.rateLink(link.id, getVisitorId(), score);
       onRatingChange?.();
+      onToast?.(`Note de ${score}/5 enregistrée`);
     } catch {}
   };
 
@@ -52,6 +56,7 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
     try {
       await api.reportDeadLink(link.id, getVisitorId());
       setReported(true);
+      onToast?.('Lien signalé comme mort', 'info');
     } catch {}
   };
 
@@ -123,8 +128,22 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
         </div>
       </motion.div>
 
-      {/* Top right: favorite + edit + report */}
+      {/* Top right: visitor fav + admin fav + edit + report */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+        {onToggleVisitorFav && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleVisitorFav(link.id); }}
+            className={cn(
+              'p-1 rounded-md transition-all duration-200',
+              isVisitorFav
+                ? 'text-rose-500 dark:text-rose-400'
+                : 'text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-rose-500 dark:hover:text-rose-400'
+            )}
+            title={isVisitorFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          >
+            <Heart className={cn('w-3.5 h-3.5', isVisitorFav && 'fill-rose-500 dark:fill-rose-400')} />
+          </button>
+        )}
         {link.favorite && (
           <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
         )}
