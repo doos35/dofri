@@ -7,6 +7,7 @@ import LinkCard from '../components/links/LinkCard';
 import SearchBar from '../components/search/SearchBar';
 import CategoryFilter from '../components/search/CategoryFilter';
 import TagFilter from '../components/search/TagFilter';
+import SortSelect from '../components/search/SortSelect';
 import Modal from '../components/ui/Modal';
 import LinkForm from '../admin/LinkForm';
 import { Link as LinkType, UpdateLinkDTO } from '../types';
@@ -23,9 +24,11 @@ export default function HomePage() {
     searchTerm,
     activeCategory,
     activeTags,
+    sortBy,
     setSearchTerm,
     setActiveCategory,
     toggleTag,
+    setSortBy,
     refreshRatings,
     refreshLinks,
   } = useLinksContext();
@@ -55,7 +58,7 @@ export default function HomePage() {
   const nonFavorites = links.filter(l => !l.favorite);
 
   // Group by category if no filter active
-  const grouped = !activeCategory && !searchTerm && activeTags.length === 0;
+  const grouped = !activeCategory && !searchTerm && activeTags.length === 0 && !sortBy;
   const categoryGroups = grouped
     ? categories.reduce((acc, cat) => {
         const catLinks = nonFavorites.filter(l => l.category === cat);
@@ -141,7 +144,12 @@ export default function HomePage() {
 
       {/* Filters */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 mb-8">
-        <CategoryFilter categories={categories} active={activeCategory} onChange={setActiveCategory} />
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <CategoryFilter categories={categories} active={activeCategory} onChange={setActiveCategory} />
+          </div>
+          <SortSelect value={sortBy} onChange={setSortBy} />
+        </div>
         <TagFilter tags={tags} activeTags={activeTags} onToggle={toggleTag} />
       </div>
 

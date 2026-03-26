@@ -25,6 +25,12 @@ const linkSchema = new Schema<Link>(
   { versionKey: false }
 );
 
+// Index texte pour la recherche rapide
+linkSchema.index(
+  { title: 'text', description: 'text', url: 'text', tags: 'text' },
+  { weights: { title: 10, tags: 5, description: 3, url: 1 }, default_language: 'french' }
+);
+
 const healthSchema = new Schema<HealthStatus>(
   {
     linkId: { type: String, required: true, unique: true },

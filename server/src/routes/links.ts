@@ -4,16 +4,18 @@ import * as ratingService from '../services/ratingService';
 import * as reportService from '../services/reportService';
 import { validateCreateLink, validateUpdateLink } from '../middleware/validateLink';
 import { requireAuth } from '../middleware/auth';
+import { actionLimiter, clickLimiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { search, category, tags } = req.query;
+    const { search, category, tags, sort } = req.query;
     const links = await linkService.getAllLinks({
       search: search as string,
       category: category as string,
       tags: tags as string,
+      sort: sort as string,
     });
     res.json(links);
   } catch (err) {
@@ -50,7 +52,7 @@ router.get('/ratings', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/:id/rate', async (req: Request, res: Response) => {
+router.post('/:id/rate', actionLimiter, async (req: Request, res: Response) => {
   try {
     const { visitorId, score } = req.body;
     if (!visitorId || typeof score !== 'number' || score < 1 || score > 5) {
@@ -65,7 +67,7 @@ router.post('/:id/rate', async (req: Request, res: Response) => {
 });
 
 // Report dead link - public
-router.post('/:id/report-dead', async (req: Request, res: Response) => {
+router.post('/:id/report-dead', actionLimiter, async (req: Request, res: Response) => {
   try {
     const { visitorId } = req.body;
     if (!visitorId) {
@@ -97,7 +99,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Click tracking - public (no auth needed)
-router.post('/:id/click', async (req: Request, res: Response) => {
+router.post('/:id/click', clickLimiter, async (req: Request, res: Response) => {
   try {
     const link = await linkService.trackClick(req.params.id);
     if (!link) {

@@ -8,6 +8,7 @@ export async function getAllLinks(filters?: {
   search?: string;
   category?: string;
   tags?: string;
+  sort?: string;
 }): Promise<Link[]> {
   const query: Record<string, unknown> = {};
 
@@ -20,19 +21,38 @@ export async function getAllLinks(filters?: {
     query.tags = { $in: filterTags.map(t => new RegExp(`^${t}$`, 'i')) };
   }
 
-  let links = await LinkModel.find(query, PROJ).lean<Link[]>();
-
+  // Recherche : regex sur titre/description/url/tags (supporte les sous-chaînes)
   if (filters?.search) {
-    const q = filters.search.toLowerCase();
-    links = links.filter(l =>
-      l.title.toLowerCase().includes(q) ||
-      l.description.toLowerCase().includes(q) ||
-      l.url.toLowerCase().includes(q) ||
-      l.tags.some(t => t.toLowerCase().includes(q))
-    );
+    const escaped = filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+    query.$or = [
+      { title: regex },
+      { description: regex },
+      { url: regex },
+      { tags: regex },
+    ];
   }
 
-  return links;
+  // Tri
+  let sortOption: Record<string, 1 | -1> = {};
+  switch (filters?.sort) {
+    case 'clicks':
+      sortOption = { clicks: -1 };
+      break;
+    case 'newest':
+      sortOption = { createdAt: -1 };
+      break;
+    case 'oldest':
+      sortOption = { createdAt: 1 };
+      break;
+    case 'title':
+      sortOption = { title: 1 };
+      break;
+    default:
+      sortOption = { category: 1, title: 1 };
+  }
+
+  return LinkModel.find(query, PROJ).sort(sortOption).lean<Link[]>();
 }
 
 export async function getLinkById(id: string): Promise<Link | undefined> {

@@ -13,9 +13,11 @@ interface LinksContextType {
   searchTerm: string;
   activeCategory: string;
   activeTags: string[];
+  sortBy: string;
   setSearchTerm: (term: string) => void;
   setActiveCategory: (cat: string) => void;
   toggleTag: (tag: string) => void;
+  setSortBy: (sort: string) => void;
   refreshLinks: () => Promise<void>;
   refreshHealth: () => Promise<void>;
   refreshRatings: () => Promise<void>;
@@ -33,6 +35,7 @@ export function LinksProvider({ children }: { children: ReactNode }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState('');
 
   const refreshLinks = useCallback(async () => {
     try {
@@ -42,6 +45,7 @@ export function LinksProvider({ children }: { children: ReactNode }) {
           search: searchTerm || undefined,
           category: activeCategory || undefined,
           tags: activeTags.length > 0 ? activeTags.join(',') : undefined,
+          sort: sortBy || undefined,
         }),
         api.fetchCategories(),
         api.fetchTags(),
@@ -54,7 +58,7 @@ export function LinksProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, activeCategory, activeTags]);
+  }, [searchTerm, activeCategory, activeTags, sortBy]);
 
   const refreshHealth = useCallback(async () => {
     try {
@@ -109,9 +113,11 @@ export function LinksProvider({ children }: { children: ReactNode }) {
         searchTerm,
         activeCategory,
         activeTags,
+        sortBy,
         setSearchTerm,
         setActiveCategory,
         toggleTag,
+        setSortBy,
         refreshLinks,
         refreshHealth,
         refreshRatings,

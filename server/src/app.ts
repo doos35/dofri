@@ -7,6 +7,7 @@ import healthRouter from './routes/health';
 import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import { errorHandler } from './middleware/errorHandler';
+import { generalLimiter } from './middleware/rateLimiter';
 
 const app = express();
 
@@ -37,6 +38,9 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '1mb' }));
+
+// Rate limiting global
+app.use('/api', generalLimiter);
 
 // API routes
 app.use('/api/auth', authRouter);
