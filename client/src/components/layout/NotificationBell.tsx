@@ -138,12 +138,17 @@ export default function NotificationBell() {
                               <Icon className="w-3 h-3" />
                               {cfg.label}
                             </span>
+                            {notif.auto && notif.linkCategory && (
+                              <span className="inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">
+                                {notif.linkCategory}
+                              </span>
+                            )}
                             <span className="text-xs text-gray-400 dark:text-gray-500">{group.label}</span>
                           </div>
 
                           {/* Titre */}
                           <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                            {notif.title}
+                            {notif.auto ? `Nouveau lien : ${notif.title}` : notif.title}
                           </h4>
 
                           {/* Contenu en puces */}

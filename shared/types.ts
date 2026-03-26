@@ -69,5 +69,7 @@ export interface Notification {
   title: string;
   content: string;
   badge: 'nouveau' | 'amélioration' | 'correction' | 'info';
+  auto: boolean;
+  linkCategory?: string;
   createdAt: string;
 }

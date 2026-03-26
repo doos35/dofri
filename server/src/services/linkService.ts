@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { LinkModel } from '../db/models';
+import { LinkModel, NotificationModel } from '../db/models';
 import { Link, CreateLinkDTO, UpdateLinkDTO } from '../types';
 
 const PROJ = { _id: 0, __v: 0 };
@@ -87,6 +87,18 @@ export async function createLink(data: CreateLinkDTO): Promise<Link> {
   };
 
   await LinkModel.create(newLink);
+
+  // Notification automatique
+  NotificationModel.create({
+    id: uuidv4(),
+    title: newLink.title,
+    content: newLink.description || '',
+    badge: 'nouveau',
+    auto: true,
+    linkCategory: newLink.category,
+    createdAt: now,
+  }).catch(() => {});
+
   return newLink;
 }
 
