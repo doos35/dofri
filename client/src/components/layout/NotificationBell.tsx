@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Sparkles, Wrench, Bug, Info } from 'lucide-react';
+import { Bell, Sparkles, Wrench, Bug, Info, ExternalLink } from 'lucide-react';
 import { Notification } from '../../types';
 import * as api from '../../api/linksApi';
 import { cn } from '../../utils/cn';
@@ -127,8 +127,20 @@ export default function NotificationBell() {
                       const Icon = cfg.icon;
                       const lines = notif.content ? notif.content.split('\n').filter(l => l.trim()) : [];
 
+                      const Wrapper = notif.linkUrl ? 'a' : 'div';
+                      const wrapperProps = notif.linkUrl
+                        ? { href: notif.linkUrl, target: '_blank' as const, rel: 'noopener noreferrer' }
+                        : {};
+
                       return (
-                        <div key={notif.id}>
+                        <Wrapper
+                          key={notif.id}
+                          {...wrapperProps}
+                          className={cn(
+                            'block rounded-xl px-3 py-2.5 -mx-3 transition-colors',
+                            notif.linkUrl && 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer group/notif'
+                          )}
+                        >
                           {/* Badge + date */}
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className={cn(
@@ -147,9 +159,16 @@ export default function NotificationBell() {
                           </div>
 
                           {/* Titre */}
-                          <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                            {notif.auto ? `Nouveau lien : ${notif.title}` : notif.title}
-                          </h4>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                              {notif.auto && notif.badge === 'nouveau' ? `Nouveau lien : ${notif.title}` :
+                               notif.auto && notif.badge === 'amélioration' ? `Lien mis à jour : ${notif.title}` :
+                               notif.title}
+                            </h4>
+                            {notif.linkUrl && (
+                              <ExternalLink className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 opacity-0 group-hover/notif:opacity-100 transition-opacity flex-shrink-0" />
+                            )}
+                          </div>
 
                           {/* Contenu en puces */}
                           {lines.length > 0 && (
@@ -162,7 +181,7 @@ export default function NotificationBell() {
                               ))}
                             </ul>
                           )}
-                        </div>
+                        </Wrapper>
                       );
                     })}
                   </div>

@@ -96,6 +96,7 @@ export async function createLink(data: CreateLinkDTO): Promise<Link> {
     badge: 'nouveau',
     auto: true,
     linkCategory: newLink.category,
+    linkUrl: newLink.url,
     createdAt: now,
   }).catch(() => {});
 
@@ -113,11 +114,26 @@ export async function updateLink(id: string, data: UpdateLinkDTO): Promise<Link 
     } catch {}
   }
 
+  const urlChanged = data.url && data.url !== existing.url;
+
   const updated = await LinkModel.findOneAndUpdate(
     { id },
     { ...data, updatedAt: new Date().toISOString() },
     { new: true, projection: PROJ }
   ).lean<Link>();
+
+  if (urlChanged && updated) {
+    NotificationModel.create({
+      id: uuidv4(),
+      title: updated.title,
+      content: `Nouvelle adresse : ${updated.url}`,
+      badge: 'amélioration',
+      auto: true,
+      linkCategory: updated.category,
+      linkUrl: updated.url,
+      createdAt: new Date().toISOString(),
+    }).catch(() => {});
+  }
 
   return updated ?? null;
 }

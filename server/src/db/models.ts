@@ -94,6 +94,7 @@ interface NotificationDoc {
   badge: 'nouveau' | 'amélioration' | 'correction' | 'info';
   auto: boolean;
   linkCategory?: string;
+  linkUrl?: string;
   createdAt: string;
 }
 
@@ -105,6 +106,7 @@ const notificationSchema = new Schema<NotificationDoc>(
     badge: { type: String, default: 'nouveau' },
     auto: { type: Boolean, default: false },
     linkCategory: { type: String, default: '' },
+    linkUrl: { type: String, default: '' },
     createdAt: String,
   },
   { versionKey: false }
