@@ -292,6 +292,8 @@ export default function HomePage() {
                           key={link.id}
                           link={link}
                           health={healthStatuses.get(link.id)}
+                          rating={ratings.get(link.id)}
+                          onRatingChange={refreshRatings}
                           index={idx}
                         />
                       ))}
