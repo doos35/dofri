@@ -1,23 +1,27 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Globe, Star, MousePointerClick, Monitor } from 'lucide-react';
-import { Link, HealthStatus } from '../../types';
+import { ExternalLink, Globe, Star, MousePointerClick, Monitor, Flag } from 'lucide-react';
+import { Link, HealthStatus, RatingSummary } from '../../types';
 import StatusBadge from '../ui/StatusBadge';
+import StarRating from '../ui/StarRating';
 import { cn } from '../../utils/cn';
+import { getVisitorId } from '../../utils/visitorId';
 import * as api from '../../api/linksApi';
 
 interface LinkCardProps {
   link: Link;
   health?: HealthStatus;
+  rating?: RatingSummary;
+  onRatingChange?: () => void;
   index?: number;
 }
 
-export default function LinkCard({ link, health, index = 0 }: LinkCardProps) {
+export default function LinkCard({ link, health, rating, onRatingChange, index = 0 }: LinkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  // hasHovered: déclenche le chargement de l'image une seule fois au premier survol
   const [hasHovered, setHasHovered] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [reported, setReported] = useState(false);
 
   const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(link.url)}&screenshot=true&meta=false&embed=screenshot.url`;
 
@@ -32,6 +36,22 @@ export default function LinkCard({ link, health, index = 0 }: LinkCardProps) {
 
   const handleClick = () => {
     api.trackClick(link.id).catch(() => {});
+  };
+
+  const handleRate = async (score: number) => {
+    try {
+      await api.rateLink(link.id, getVisitorId(), score);
+      onRatingChange?.();
+    } catch {}
+  };
+
+  const handleReport = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await api.reportDeadLink(link.id, getVisitorId());
+      setReported(true);
+    } catch {}
   };
 
   const statusColor = {
@@ -62,7 +82,7 @@ export default function LinkCard({ link, health, index = 0 }: LinkCardProps) {
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
       layout
     >
-      {/* Screenshot — déroule depuis le haut de la carte */}
+      {/* Screenshot */}
       <motion.div
         className="-mx-5 -mt-5 overflow-hidden"
         animate={{
@@ -72,23 +92,18 @@ export default function LinkCard({ link, health, index = 0 }: LinkCardProps) {
         transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
       >
         <div className="relative w-full h-[156px] bg-gray-100 dark:bg-gray-700">
-          {/* Spinner de chargement */}
           {hasHovered && !imgLoaded && !imgError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
               <span className="text-xs text-gray-400 dark:text-gray-500">Chargement…</span>
             </div>
           )}
-
-          {/* Erreur */}
           {imgError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 dark:text-gray-500">
               <Monitor className="w-8 h-8" />
               <span className="text-xs">Aperçu indisponible</span>
             </div>
           )}
-
-          {/* Image screenshot (chargée uniquement au premier survol) */}
           {hasHovered && !imgError && (
             <img
               src={screenshotUrl}
@@ -101,22 +116,33 @@ export default function LinkCard({ link, health, index = 0 }: LinkCardProps) {
               onError={() => setImgError(true)}
             />
           )}
-
-          {/* Dégradé bas pour adoucir la transition vers le contenu */}
           {imgLoaded && (
             <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/60 dark:from-gray-800/60 to-transparent" />
           )}
         </div>
       </motion.div>
 
-      {/* Étoile favoris */}
-      {link.favorite && (
-        <div className="absolute top-3 right-3 z-10">
+      {/* Top right: favorite + report */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+        {link.favorite && (
           <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-        </div>
-      )}
+        )}
+        <button
+          onClick={handleReport}
+          disabled={reported}
+          className={cn(
+            'p-1 rounded-md transition-all duration-200',
+            reported
+              ? 'text-red-400 dark:text-red-500 cursor-default'
+              : 'text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+          )}
+          title={reported ? 'Lien signalé' : 'Signaler comme mort'}
+        >
+          <Flag className={cn('w-3.5 h-3.5', reported && 'fill-red-400 dark:fill-red-500')} />
+        </button>
+      </div>
 
-      {/* Contenu de la carte */}
+      {/* Card content */}
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
           {link.icon ? (
@@ -147,6 +173,16 @@ export default function LinkCard({ link, health, index = 0 }: LinkCardProps) {
               {link.description}
             </p>
           )}
+
+          {/* Rating */}
+          <div className="mb-2" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+            <StarRating
+              average={rating?.average ?? 0}
+              count={rating?.count ?? 0}
+              userRating={rating?.userRating ?? null}
+              onRate={handleRate}
+            />
+          </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400">

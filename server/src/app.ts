@@ -5,6 +5,7 @@ import path from 'path';
 import linksRouter from './routes/links';
 import healthRouter from './routes/health';
 import authRouter from './routes/auth';
+import reportsRouter from './routes/reports';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -41,6 +42,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use('/api/auth', authRouter);
 app.use('/api/links', linksRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/reports', reportsRouter);
 
 // Serve client build in production
 const clientDist = path.join(__dirname, '../../client/dist');

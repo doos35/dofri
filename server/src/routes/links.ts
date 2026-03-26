@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import * as linkService from '../services/linkService';
+import * as ratingService from '../services/ratingService';
+import * as reportService from '../services/reportService';
 import { validateCreateLink, validateUpdateLink } from '../middleware/validateLink';
 import { requireAuth } from '../middleware/auth';
 
@@ -34,6 +36,50 @@ router.get('/tags', async (_req: Request, res: Response) => {
     res.json(tags);
   } catch (err) {
     res.status(500).json({ error: 'Erreur lors de la récupération des tags' });
+  }
+});
+
+// Ratings - public
+router.get('/ratings', async (req: Request, res: Response) => {
+  try {
+    const visitorId = req.query.visitorId as string | undefined;
+    const summaries = await ratingService.getBulkRatingSummaries(visitorId);
+    res.json(summaries);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des notes' });
+  }
+});
+
+router.post('/:id/rate', async (req: Request, res: Response) => {
+  try {
+    const { visitorId, score } = req.body;
+    if (!visitorId || typeof score !== 'number' || score < 1 || score > 5) {
+      res.status(400).json({ error: 'visitorId et score (1-5) requis' });
+      return;
+    }
+    const summary = await ratingService.rateLink(req.params.id, visitorId, score);
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors de la notation' });
+  }
+});
+
+// Report dead link - public
+router.post('/:id/report-dead', async (req: Request, res: Response) => {
+  try {
+    const { visitorId } = req.body;
+    if (!visitorId) {
+      res.status(400).json({ error: 'visitorId requis' });
+      return;
+    }
+    const report = await reportService.reportDeadLink(req.params.id, visitorId);
+    if (!report) {
+      res.json({ alreadyReported: true });
+      return;
+    }
+    res.status(201).json(report);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors du signalement' });
   }
 });
 

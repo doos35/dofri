@@ -39,3 +39,24 @@ export interface UpdateLinkDTO {
   tags?: string[];
   icon?: string;
 }
+
+export interface RatingSummary {
+  linkId: string;
+  average: number;
+  count: number;
+  userRating: number | null;
+}
+
+export interface DeadLinkReport {
+  id: string;
+  linkId: string;
+  visitorId: string;
+  createdAt: string;
+  dismissed: boolean;
+  dismissedAt?: string;
+}
+
+export interface DeadLinkReportWithLink extends DeadLinkReport {
+  linkTitle: string;
+  linkUrl: string;
+}

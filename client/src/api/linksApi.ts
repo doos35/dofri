@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Link, HealthStatus, CreateLinkDTO, UpdateLinkDTO } from '../types';
+import { Link, HealthStatus, CreateLinkDTO, UpdateLinkDTO, RatingSummary, DeadLinkReportWithLink } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const api = axios.create({ baseURL: BASE_URL });
@@ -84,4 +84,39 @@ export async function trackClick(id: string): Promise<{ clicks: number }> {
 export async function toggleFavorite(id: string): Promise<Link> {
   const { data } = await api.patch<Link>(`/links/${id}/favorite`);
   return data;
+}
+
+// Ratings
+export async function fetchRatings(visitorId?: string): Promise<RatingSummary[]> {
+  const params = visitorId ? `?visitorId=${visitorId}` : '';
+  const { data } = await api.get<RatingSummary[]>(`/links/ratings${params}`);
+  return data;
+}
+
+export async function rateLink(linkId: string, visitorId: string, score: number): Promise<RatingSummary> {
+  const { data } = await api.post<RatingSummary>(`/links/${linkId}/rate`, { visitorId, score });
+  return data;
+}
+
+// Reports
+export async function reportDeadLink(linkId: string, visitorId: string): Promise<void> {
+  await api.post(`/links/${linkId}/report-dead`, { visitorId });
+}
+
+export async function fetchReports(): Promise<{ reports: DeadLinkReportWithLink[]; undismissedCount: number }> {
+  const { data } = await api.get('/reports');
+  return data;
+}
+
+export async function fetchReportCount(): Promise<number> {
+  const { data } = await api.get<{ count: number }>('/reports/count');
+  return data.count;
+}
+
+export async function dismissReport(reportId: string): Promise<void> {
+  await api.patch(`/reports/${reportId}/dismiss`);
+}
+
+export async function dismissAllReports(): Promise<void> {
+  await api.post('/reports/dismiss-all');
 }

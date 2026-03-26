@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Link, HealthStatus } from '../types';
+import { Link, HealthStatus, RatingSummary } from '../types';
 import * as api from '../api/linksApi';
+import { getVisitorId } from '../utils/visitorId';
 
 interface LinksContextType {
   links: Link[];
   healthStatuses: Map<string, HealthStatus>;
+  ratings: Map<string, RatingSummary>;
   categories: string[];
   tags: { tag: string; count: number }[];
   loading: boolean;
@@ -16,6 +18,7 @@ interface LinksContextType {
   toggleTag: (tag: string) => void;
   refreshLinks: () => Promise<void>;
   refreshHealth: () => Promise<void>;
+  refreshRatings: () => Promise<void>;
 }
 
 const LinksContext = createContext<LinksContextType | null>(null);
@@ -23,6 +26,7 @@ const LinksContext = createContext<LinksContextType | null>(null);
 export function LinksProvider({ children }: { children: ReactNode }) {
   const [links, setLinks] = useState<Link[]>([]);
   const [healthStatuses, setHealthStatuses] = useState<Map<string, HealthStatus>>(new Map());
+  const [ratings, setRatings] = useState<Map<string, RatingSummary>>(new Map());
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<{ tag: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +69,17 @@ export function LinksProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const refreshRatings = useCallback(async () => {
+    try {
+      const summaries = await api.fetchRatings(getVisitorId());
+      const map = new Map<string, RatingSummary>();
+      for (const s of summaries) map.set(s.linkId, s);
+      setRatings(map);
+    } catch (err) {
+      console.error('Failed to fetch ratings:', err);
+    }
+  }, []);
+
   const toggleTag = useCallback((tag: string) => {
     setActiveTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
@@ -77,15 +92,17 @@ export function LinksProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshHealth();
+    refreshRatings();
     const interval = setInterval(refreshHealth, 60000);
     return () => clearInterval(interval);
-  }, [refreshHealth]);
+  }, [refreshHealth, refreshRatings]);
 
   return (
     <LinksContext.Provider
       value={{
         links,
         healthStatuses,
+        ratings,
         categories,
         tags,
         loading,
@@ -97,6 +114,7 @@ export function LinksProvider({ children }: { children: ReactNode }) {
         toggleTag,
         refreshLinks,
         refreshHealth,
+        refreshRatings,
       }}
     >
       {children}

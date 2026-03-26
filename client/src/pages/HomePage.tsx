@@ -11,6 +11,7 @@ export default function HomePage() {
   const {
     links,
     healthStatuses,
+    ratings,
     categories,
     tags,
     loading,
@@ -20,6 +21,7 @@ export default function HomePage() {
     setSearchTerm,
     setActiveCategory,
     toggleTag,
+    refreshRatings,
   } = useLinksContext();
 
   const [vpnBannerDismissed, setVpnBannerDismissed] = useState(false);
@@ -260,6 +262,8 @@ export default function HomePage() {
                       key={link.id}
                       link={link}
                       health={healthStatuses.get(link.id)}
+                      rating={ratings.get(link.id)}
+                      onRatingChange={refreshRatings}
                       index={idx}
                     />
                   ))}
@@ -303,6 +307,8 @@ export default function HomePage() {
                       key={link.id}
                       link={link}
                       health={healthStatuses.get(link.id)}
+                      rating={ratings.get(link.id)}
+                      onRatingChange={refreshRatings}
                       index={idx}
                     />
                   ))}

@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Edit3, RefreshCw, ExternalLink, Search,
-  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick
+  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell
 } from 'lucide-react';
 import { Link as LinkType, HealthStatus, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
 import LinkForm from '../admin/LinkForm';
+import NotificationPanel from '../components/admin/NotificationPanel';
 
 export default function AdminPage() {
   const [links, setLinks] = useState<LinkType[]>([]);
@@ -20,6 +21,8 @@ export default function AdminPage() {
   const [editLink, setEditLink] = useState<LinkType | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const [reportCount, setReportCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -43,6 +46,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     loadData();
+    api.fetchReportCount().then(setReportCount).catch(() => {});
   }, [loadData]);
 
   const handleCreate = async (data: CreateLinkDTO | UpdateLinkDTO) => {
@@ -192,6 +196,18 @@ export default function AdminPage() {
             />
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="relative inline-flex items-center justify-center w-11 h-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+              title="Signalements"
+            >
+              <Bell className="w-5 h-5" />
+              {reportCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold text-white bg-red-500 rounded-full animate-pulse">
+                  {reportCount}
+                </span>
+              )}
+            </button>
             <button
               onClick={handleHealthCheck}
               disabled={checking}
@@ -384,6 +400,13 @@ export default function AdminPage() {
           </button>
         </div>
       </Modal>
+
+      {/* Notification Panel */}
+      <NotificationPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onCountChange={setReportCount}
+      />
     </div>
   );
 }
