@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star } from 'lucide-react';
+import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Shield, ShieldBan, X, Monitor, Smartphone } from 'lucide-react';
 import { useLinksContext } from '../context/LinksContext';
 import LinkCard from '../components/links/LinkCard';
 import SearchBar from '../components/search/SearchBar';
@@ -20,6 +21,9 @@ export default function HomePage() {
     setActiveCategory,
     toggleTag,
   } = useLinksContext();
+
+  const [vpnBannerDismissed, setVpnBannerDismissed] = useState(false);
+  const [adblockBannerDismissed, setAdblockBannerDismissed] = useState(false);
 
   // Stats
   const totalLinks = links.length;
@@ -111,6 +115,107 @@ export default function HomePage() {
         <CategoryFilter categories={categories} active={activeCategory} onChange={setActiveCategory} />
         <TagFilter tags={tags} activeTags={activeTags} onToggle={toggleTag} />
       </div>
+
+      {/* VPN Banner */}
+      <AnimatePresence>
+        {!vpnBannerDismissed && (
+          <motion.div
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="relative flex items-center gap-4 px-5 py-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50">
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-emerald-900 dark:text-emerald-200">
+                  Protégez votre vie privée — utilisez un VPN
+                </p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400/70 mt-0.5">
+                  Un VPN masque votre adresse IP et chiffre votre connexion.{' '}
+                  <a
+                    href="https://protonvpn.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline underline-offset-2 hover:text-emerald-900 dark:hover:text-emerald-200 transition-colors"
+                  >
+                    ProtonVPN
+                  </a>
+                  {' '}propose un plan gratuit, sans limite de temps.
+                </p>
+              </div>
+              <button
+                onClick={() => setVpnBannerDismissed(true)}
+                className="flex-shrink-0 p-1.5 rounded-lg text-emerald-400 dark:text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                title="Fermer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Adblock Banner */}
+      <AnimatePresence>
+        {!adblockBannerDismissed && (
+          <motion.div
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="relative flex items-start gap-4 px-5 py-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50">
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mt-0.5">
+                <ShieldBan className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                  Bloquez les pubs — c'est indispensable
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400/70">
+                    <Monitor className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>
+                      <span className="font-medium text-amber-800 dark:text-amber-300">PC :</span>{' '}
+                      <a href="https://brave.com/download/" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors">Brave</a>
+                      {' '}(bloqueur intégré) +{' '}
+                      <a href="https://ublockorigin.com" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors">uBlock Origin</a>
+                      {' '}pour une protection maximale
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400/70">
+                    <Smartphone className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>
+                      <span className="font-medium text-amber-800 dark:text-amber-300">Android :</span>{' '}
+                      <a href="https://play.google.com/store/apps/details?id=com.hsv.freeadblockerbrowser" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors">FAB Adblocker Browser</a>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400/70">
+                    <Smartphone className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>
+                      <span className="font-medium text-amber-800 dark:text-amber-300">iPhone :</span>{' '}
+                      <a href="https://apps.apple.com/app/brave-private-web-browser/id1052879175" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 transition-colors">Brave</a>
+                      {' '}(bloqueur intégré)
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setAdblockBannerDismissed(true)}
+                className="flex-shrink-0 p-1.5 rounded-lg text-amber-400 dark:text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+                title="Fermer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
