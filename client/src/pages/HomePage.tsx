@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Shield, ShieldBan, X, Monitor, Smartphone } from 'lucide-react';
+import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Shield, ShieldBan, X, Monitor, Smartphone, Flag } from 'lucide-react';
 import { useLinksContext } from '../context/LinksContext';
 import LinkCard from '../components/links/LinkCard';
 import SearchBar from '../components/search/SearchBar';
@@ -109,6 +109,16 @@ export default function HomePage() {
               <span>{deadCount} hors ligne</span>
             </div>
           </motion.div>
+
+          <motion.p
+            className="flex items-center justify-center gap-1.5 mt-3 text-xs text-red-300/80"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Flag className="w-3 h-3" />
+            Survolez un lien et cliquez sur le drapeau pour signaler un lien mort
+          </motion.p>
         </motion.div>
       </div>
 
