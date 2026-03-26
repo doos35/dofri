@@ -4,6 +4,7 @@ import { Settings, Home, LogIn, LogOut, Sun, Moon } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import NotificationBell from './NotificationBell';
 
 export default function Header() {
   const location = useLocation();
@@ -101,6 +102,9 @@ export default function Header() {
                 <span className="hidden sm:inline">Connexion</span>
               </Link>
             )}
+
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* Dark mode toggle */}
             <button
