@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, Globe, Star, MousePointerClick, Monitor, Flag } from 'lucide-react';
+import { ExternalLink, Globe, Star, MousePointerClick, Monitor, Flag, Pencil } from 'lucide-react';
 import { Link, HealthStatus, RatingSummary } from '../../types';
 import StatusBadge from '../ui/StatusBadge';
 import StarRating from '../ui/StarRating';
@@ -13,10 +13,11 @@ interface LinkCardProps {
   health?: HealthStatus;
   rating?: RatingSummary;
   onRatingChange?: () => void;
+  onEdit?: (link: Link) => void;
   index?: number;
 }
 
-export default function LinkCard({ link, health, rating, onRatingChange, index = 0 }: LinkCardProps) {
+export default function LinkCard({ link, health, rating, onRatingChange, onEdit, index = 0 }: LinkCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hasHovered, setHasHovered] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -122,10 +123,19 @@ export default function LinkCard({ link, health, rating, onRatingChange, index =
         </div>
       </motion.div>
 
-      {/* Top right: favorite + report */}
+      {/* Top right: favorite + edit + report */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
         {link.favorite && (
           <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+        )}
+        {onEdit && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(link); }}
+            className="p-1 rounded-md transition-all duration-200 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+            title="Modifier"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
         )}
         <button
           onClick={handleReport}

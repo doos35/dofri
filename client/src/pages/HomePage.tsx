@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Shield, ShieldBan, X, Monitor, Smartphone, Flag } from 'lucide-react';
 import { useLinksContext } from '../context/LinksContext';
+import { useAuth } from '../context/AuthContext';
 import LinkCard from '../components/links/LinkCard';
 import SearchBar from '../components/search/SearchBar';
 import CategoryFilter from '../components/search/CategoryFilter';
 import TagFilter from '../components/search/TagFilter';
+import Modal from '../components/ui/Modal';
+import LinkForm from '../admin/LinkForm';
+import { Link as LinkType, UpdateLinkDTO } from '../types';
+import * as api from '../api/linksApi';
 
 export default function HomePage() {
   const {
@@ -22,10 +27,22 @@ export default function HomePage() {
     setActiveCategory,
     toggleTag,
     refreshRatings,
+    refreshLinks,
   } = useLinksContext();
 
+  const { isAuthenticated } = useAuth();
   const [vpnBannerDismissed, setVpnBannerDismissed] = useState(false);
   const [adblockBannerDismissed, setAdblockBannerDismissed] = useState(false);
+  const [editLink, setEditLink] = useState<LinkType | null>(null);
+
+  const handleEdit = isAuthenticated ? (link: LinkType) => setEditLink(link) : undefined;
+
+  const handleUpdate = async (data: UpdateLinkDTO) => {
+    if (!editLink) return;
+    await api.updateLink(editLink.id, data);
+    setEditLink(null);
+    await refreshLinks();
+  };
 
   // Stats
   const totalLinks = links.length;
@@ -274,6 +291,7 @@ export default function HomePage() {
                       health={healthStatuses.get(link.id)}
                       rating={ratings.get(link.id)}
                       onRatingChange={refreshRatings}
+                      onEdit={handleEdit}
                       index={idx}
                     />
                   ))}
@@ -304,6 +322,7 @@ export default function HomePage() {
                           health={healthStatuses.get(link.id)}
                           rating={ratings.get(link.id)}
                           onRatingChange={refreshRatings}
+                          onEdit={handleEdit}
                           index={idx}
                         />
                       ))}
@@ -321,6 +340,7 @@ export default function HomePage() {
                       health={healthStatuses.get(link.id)}
                       rating={ratings.get(link.id)}
                       onRatingChange={refreshRatings}
+                      onEdit={handleEdit}
                       index={idx}
                     />
                   ))}
@@ -330,6 +350,16 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Admin edit modal */}
+      <Modal isOpen={!!editLink} onClose={() => setEditLink(null)} title="Modifier le lien">
+        <LinkForm
+          link={editLink}
+          categories={categories}
+          onSubmit={handleUpdate}
+          onCancel={() => setEditLink(null)}
+        />
+      </Modal>
     </div>
   );
 }
