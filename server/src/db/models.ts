@@ -19,6 +19,7 @@ const linkSchema = new Schema<Link>(
     icon: { type: String, default: '' },
     favorite: { type: Boolean, default: false },
     clicks: { type: Number, default: 0 },
+    order: { type: Number, default: 0 },
     createdAt: String,
     updatedAt: String,
   },

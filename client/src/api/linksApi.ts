@@ -122,3 +122,17 @@ export async function dismissReport(reportId: string): Promise<void> {
 export async function dismissAllReports(): Promise<void> {
   await api.post('/reports/dismiss-all');
 }
+
+// Reorder
+export async function reorderLinks(orderedIds: string[]): Promise<void> {
+  await api.put('/links/reorder', { orderedIds });
+}
+
+// Bulk import
+export async function importLinks(links: Array<{
+  title: string; url: string; category: string;
+  description?: string; tags?: string[]; icon?: string;
+}>): Promise<{ created: number; skipped: number; errors: string[] }> {
+  const { data } = await api.post('/links/import', { links });
+  return data;
+}

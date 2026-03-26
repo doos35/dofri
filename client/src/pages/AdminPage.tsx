@@ -1,15 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Edit3, RefreshCw, ExternalLink, Search,
-  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell
+  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical
 } from 'lucide-react';
-import { Link as LinkType, HealthStatus, CreateLinkDTO, UpdateLinkDTO } from '../types';
+import { Link as LinkType, HealthStatus, RatingSummary, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
 import Modal from '../components/ui/Modal';
 import StatusBadge from '../components/ui/StatusBadge';
 import LinkForm from '../admin/LinkForm';
 import NotificationPanel from '../components/admin/NotificationPanel';
+import AdminDashboard from '../components/admin/AdminDashboard';
+import ImportLinks from '../components/admin/ImportLinks';
 
 export default function AdminPage() {
   const [links, setLinks] = useState<LinkType[]>([]);
@@ -23,6 +25,11 @@ export default function AdminPage() {
   const [checking, setChecking] = useState(false);
   const [reportCount, setReportCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [ratings, setRatings] = useState<RatingSummary[]>([]);
+  const [showDashboard, setShowDashboard] = useState(true);
+  const [showImport, setShowImport] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -47,6 +54,7 @@ export default function AdminPage() {
   useEffect(() => {
     loadData();
     api.fetchReportCount().then(setReportCount).catch(() => {});
+    api.fetchRatings().then(setRatings).catch(() => {});
   }, [loadData]);
 
   const handleCreate = async (data: CreateLinkDTO | UpdateLinkDTO) => {
@@ -84,6 +92,31 @@ export default function AdminPage() {
       console.error('Health check failed:', err);
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleDragEnd = async () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) return;
+
+    const reordered = [...filteredLinks];
+    const [dragged] = reordered.splice(dragItem.current, 1);
+    reordered.splice(dragOverItem.current, 0, dragged);
+
+    // Optimistic update
+    setLinks(prev => {
+      if (search) return prev; // Don't reorder when filtering
+      return reordered;
+    });
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    // Persist
+    try {
+      await api.reorderLinks(reordered.map(l => l.id));
+    } catch {
+      await loadData(); // Rollback on failure
     }
   };
 
@@ -178,6 +211,33 @@ export default function AdminPage() {
           </div>
         </motion.div>
 
+        {/* Dashboard toggle */}
+        <motion.button
+          onClick={() => setShowDashboard(prev => !prev)}
+          className="flex items-center gap-2 mb-4 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+        >
+          <ChevronDown className={`w-4 h-4 transition-transform ${showDashboard ? 'rotate-0' : '-rotate-90'}`} />
+          {showDashboard ? 'Masquer le dashboard' : 'Afficher le dashboard'}
+        </motion.button>
+
+        {/* Dashboard détaillé */}
+        <AnimatePresence>
+          {showDashboard && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              <AdminDashboard links={links} healthMap={healthMap} ratings={ratings} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Actions bar */}
         <motion.div
           className="flex flex-col sm:flex-row gap-4 mb-6"
@@ -217,6 +277,13 @@ export default function AdminPage() {
               Vérifier santé
             </button>
             <button
+              onClick={() => setShowImport(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+            >
+              <Upload className="w-4 h-4" />
+              Importer
+            </button>
+            <button
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 gradient-bg text-white font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/20"
             >
@@ -245,6 +312,7 @@ export default function AdminPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-700">
+                    {!search && <th className="w-8 py-4 px-2" />}
                     <th className="text-center py-4 px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-10">Fav</th>
                     <th className="text-left py-4 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Lien</th>
                     <th className="text-left py-4 px-5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Catégorie</th>
@@ -256,7 +324,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   <AnimatePresence>
-                    {filteredLinks.map(link => (
+                    {filteredLinks.map((link, idx) => (
                       <motion.tr
                         key={link.id}
                         className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
@@ -264,7 +332,17 @@ export default function AdminPage() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         layout
+                        draggable={!search}
+                        onDragStart={() => { dragItem.current = idx; }}
+                        onDragEnter={() => { dragOverItem.current = idx; }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDragEnd={handleDragEnd}
                       >
+                        {!search && (
+                          <td className="py-4 px-2 cursor-grab active:cursor-grabbing">
+                            <GripVertical className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+                          </td>
+                        )}
                         <td className="py-4 px-3 text-center">
                           <button
                             onClick={() => handleToggleFavorite(link.id)}
@@ -399,6 +477,14 @@ export default function AdminPage() {
             Annuler
           </button>
         </div>
+      </Modal>
+
+      {/* Import Modal */}
+      <Modal isOpen={showImport} onClose={() => setShowImport(false)} title="Importer des liens">
+        <ImportLinks
+          onDone={() => { setShowImport(false); loadData(); }}
+          onCancel={() => setShowImport(false)}
+        />
       </Modal>
 
       {/* Notification Panel */}

@@ -126,6 +126,64 @@ router.patch('/:id/favorite', requireAuth, async (req: Request, res: Response) =
   }
 });
 
+// Bulk import - admin only
+router.post('/import', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { links } = req.body;
+    if (!Array.isArray(links) || links.length === 0) {
+      res.status(400).json({ error: 'Un tableau "links" non vide est requis' });
+      return;
+    }
+    if (links.length > 200) {
+      res.status(400).json({ error: 'Maximum 200 liens par import' });
+      return;
+    }
+
+    const results = { created: 0, skipped: 0, errors: [] as string[] };
+
+    for (const item of links) {
+      try {
+        if (!item.title || !item.url || !item.category) {
+          results.errors.push(`"${item.title || item.url || '?'}" — titre, url et catégorie requis`);
+          results.skipped++;
+          continue;
+        }
+        await linkService.createLink({
+          title: item.title,
+          url: item.url,
+          description: item.description || '',
+          category: item.category,
+          tags: Array.isArray(item.tags) ? item.tags : [],
+          icon: item.icon || '',
+        });
+        results.created++;
+      } catch {
+        results.errors.push(`"${item.title || item.url}" — erreur d'insertion`);
+        results.skipped++;
+      }
+    }
+
+    res.status(201).json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de l'import" });
+  }
+});
+
+// Reorder links - admin only
+router.put('/reorder', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) {
+      res.status(400).json({ error: 'Un tableau "orderedIds" est requis' });
+      return;
+    }
+    await linkService.reorderLinks(orderedIds);
+    res.json({ message: 'Ordre mis à jour' });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors du réordonnement" });
+  }
+});
+
 router.post('/', requireAuth, validateCreateLink, async (req: Request, res: Response) => {
   try {
     const link = await linkService.createLink(req.body);

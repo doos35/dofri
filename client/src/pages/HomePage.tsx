@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Heart, Shield, ShieldBan, X, Monitor, Smartphone, Flag, ChevronDown } from 'lucide-react';
+import { Compass, Wifi, WifiOff, AlertTriangle, Loader2, Star, Heart, Shield, ShieldBan, X, Monitor, Smartphone, Flag, ChevronDown, Plus } from 'lucide-react';
 import { useLinksContext } from '../context/LinksContext';
 import { useAuth } from '../context/AuthContext';
 import LinkCard from '../components/links/LinkCard';
@@ -14,7 +14,7 @@ import BackToTop from '../components/ui/BackToTop';
 import LinkForm from '../admin/LinkForm';
 import { useToast } from '../hooks/useToast';
 import { useVisitorFavorites } from '../hooks/useVisitorFavorites';
-import { Link as LinkType, UpdateLinkDTO } from '../types';
+import { Link as LinkType, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
 
 export default function HomePage() {
@@ -43,9 +43,17 @@ export default function HomePage() {
   const [vpnBannerDismissed, setVpnBannerDismissed] = useState(false);
   const [adblockBannerDismissed, setAdblockBannerDismissed] = useState(false);
   const [editLink, setEditLink] = useState<LinkType | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [visibleCount, setVisibleCount] = useState(12);
 
   const handleEdit = isAuthenticated ? (link: LinkType) => setEditLink(link) : undefined;
+
+  const handleCreate = async (data: CreateLinkDTO | UpdateLinkDTO) => {
+    await api.createLink(data as CreateLinkDTO);
+    setShowAddForm(false);
+    await refreshLinks();
+    addToast('Lien ajouté avec succès');
+  };
 
   const handleUpdate = async (data: UpdateLinkDTO) => {
     if (!editLink) return;
@@ -434,6 +442,28 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Admin floating add button */}
+      {isAuthenticated && (
+        <motion.button
+          onClick={() => setShowAddForm(true)}
+          className="fixed bottom-6 right-24 z-40 w-14 h-14 rounded-full gradient-bg text-white shadow-lg hover:shadow-xl hover:opacity-90 flex items-center justify-center transition-all"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          title="Ajouter un lien"
+        >
+          <Plus className="w-6 h-6" />
+        </motion.button>
+      )}
+
+      {/* Admin add modal */}
+      <Modal isOpen={showAddForm} onClose={() => setShowAddForm(false)} title="Ajouter un lien">
+        <LinkForm
+          categories={categories}
+          onSubmit={handleCreate}
+          onCancel={() => setShowAddForm(false)}
+        />
+      </Modal>
 
       {/* Admin edit modal */}
       <Modal isOpen={!!editLink} onClose={() => setEditLink(null)} title="Modifier le lien">

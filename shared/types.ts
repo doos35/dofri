@@ -6,6 +6,9 @@ export interface Link {
   category: string;
   tags: string[];
   icon: string;
+  favorite?: boolean;
+  clicks?: number;
+  order?: number;
   createdAt: string;
   updatedAt: string;
 }

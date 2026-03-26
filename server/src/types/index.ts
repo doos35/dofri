@@ -8,6 +8,7 @@ export interface Link {
   icon: string;
   favorite: boolean;
   clicks: number;
+  order: number;
   createdAt: string;
   updatedAt: string;
 }

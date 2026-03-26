@@ -49,7 +49,7 @@ export async function getAllLinks(filters?: {
       sortOption = { title: 1 };
       break;
     default:
-      sortOption = { category: 1, title: 1 };
+      sortOption = { category: 1, order: 1, title: 1 };
   }
 
   return LinkModel.find(query, PROJ).sort(sortOption).lean<Link[]>();
@@ -81,6 +81,7 @@ export async function createLink(data: CreateLinkDTO): Promise<Link> {
     icon,
     favorite: data.favorite || false,
     clicks: 0,
+    order: 0,
     createdAt: now,
     updatedAt: now,
   };
@@ -135,6 +136,16 @@ export async function trackClick(id: string): Promise<Link | null> {
   ).lean<Link>();
 
   return updated ?? null;
+}
+
+export async function reorderLinks(orderedIds: string[]): Promise<void> {
+  const ops = orderedIds.map((id, index) => ({
+    updateOne: {
+      filter: { id },
+      update: { order: index },
+    },
+  }));
+  await LinkModel.bulkWrite(ops);
 }
 
 export async function getCategories(): Promise<string[]> {
