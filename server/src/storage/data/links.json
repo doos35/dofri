@@ -453,5 +453,44 @@
     "clicks": 0,
     "createdAt": "2024-01-01T00:00:00.000Z",
     "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "dofri-0036-4000-8000-000000000036",
+    "title": "AI Agents Directory",
+    "url": "https://aiagentsdirectory.com/",
+    "description": "Annuaire complet d'agents IA classés par catégorie et cas d'usage.",
+    "category": "IA",
+    "tags": ["ia", "agents", "annuaire", "outils"],
+    "icon": "https://www.google.com/s2/favicons?domain=aiagentsdirectory.com&sz=64",
+    "favorite": false,
+    "clicks": 0,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "dofri-0037-4000-8000-000000000037",
+    "title": "AIxploria",
+    "url": "https://www.aixploria.com/",
+    "description": "Moteur de recherche et répertoire d'outils IA avec fiches détaillées et avis.",
+    "category": "IA",
+    "tags": ["ia", "outils", "annuaire", "recherche"],
+    "icon": "https://www.google.com/s2/favicons?domain=aixploria.com&sz=64",
+    "favorite": false,
+    "clicks": 0,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "dofri-0038-4000-8000-000000000038",
+    "title": "AI Agents List",
+    "url": "https://aiagentslist.com/",
+    "description": "Liste collaborative d'agents IA avec descriptions, prix et comparatifs.",
+    "category": "IA",
+    "tags": ["ia", "agents", "comparatif", "liste"],
+    "icon": "https://www.google.com/s2/favicons?domain=aiagentslist.com&sz=64",
+    "favorite": false,
+    "clicks": 0,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
   }
 ]
