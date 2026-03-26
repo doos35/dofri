@@ -16,6 +16,7 @@ import { useToast } from '../hooks/useToast';
 import { useVisitorFavorites } from '../hooks/useVisitorFavorites';
 import { Link as LinkType, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
+import SEO from '../components/SEO';
 
 export default function HomePage() {
   const {
@@ -93,6 +94,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
+      <SEO />
       {/* Hero section */}
       <div
         className="relative py-16 px-4 mb-8 bg-cover bg-center bg-no-repeat"

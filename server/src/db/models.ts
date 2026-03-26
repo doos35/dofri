@@ -67,7 +67,28 @@ const reportSchema = new Schema<DeadLinkReport>(
 );
 reportSchema.index({ linkId: 1, visitorId: 1 }, { unique: true });
 
+interface ScreenshotCacheDoc {
+  url: string;
+  imageData: Buffer;
+  contentType: string;
+  cachedAt: Date;
+}
+
+const screenshotCacheSchema = new Schema<ScreenshotCacheDoc>(
+  {
+    url: { type: String, required: true, unique: true },
+    imageData: { type: Buffer, required: true },
+    contentType: { type: String, default: 'image/png' },
+    cachedAt: { type: Date, default: Date.now },
+  },
+  { versionKey: false }
+);
+
+// Auto-expire après 7 jours
+screenshotCacheSchema.index({ cachedAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
+
 export const LinkModel = mongoose.model<Link>('Link', linkSchema);
 export const HealthModel = mongoose.model<HealthStatus>('HealthStatus', healthSchema);
 export const RatingModel = mongoose.model<RatingDoc>('Rating', ratingSchema);
 export const ReportModel = mongoose.model<DeadLinkReport>('DeadLinkReport', reportSchema);
+export const ScreenshotCacheModel = mongoose.model<ScreenshotCacheDoc>('ScreenshotCache', screenshotCacheSchema);

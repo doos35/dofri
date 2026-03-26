@@ -27,7 +27,8 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
   const [imgError, setImgError] = useState(false);
   const [reported, setReported] = useState(false);
 
-  const screenshotUrl = `https://api.microlink.io/?url=${encodeURIComponent(link.url)}&screenshot=true&meta=false&embed=screenshot.url`;
+  const apiBase = import.meta.env.VITE_API_URL || '/api';
+  const screenshotUrl = `${apiBase}/screenshots?url=${encodeURIComponent(link.url)}`;
 
   const handleMouseEnter = () => {
     setHasHovered(true);

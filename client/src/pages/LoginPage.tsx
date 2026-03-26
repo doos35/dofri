@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, User, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import SEO from '../components/SEO';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -29,6 +30,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
+      <SEO title="Connexion" description="Connectez-vous à DoFri" />
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 30 }}
