@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Link, HealthStatus, CreateLinkDTO, UpdateLinkDTO, RatingSummary, DeadLinkReportWithLink } from '../types';
+import { Link, HealthStatus, CreateLinkDTO, UpdateLinkDTO, RatingSummary, DeadLinkReportWithLink, Notification } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const api = axios.create({ baseURL: BASE_URL });
@@ -135,4 +135,23 @@ export async function importLinks(links: Array<{
 }>): Promise<{ created: number; skipped: number; errors: string[] }> {
   const { data } = await api.post('/links/import', { links });
   return data;
+}
+
+// Notifications
+export async function fetchNotifications(): Promise<Notification[]> {
+  const { data } = await api.get<Notification[]>('/notifications');
+  return data;
+}
+
+export async function createNotification(payload: {
+  title: string;
+  content?: string;
+  badge?: Notification['badge'];
+}): Promise<Notification> {
+  const { data } = await api.post<Notification>('/notifications', payload);
+  return data;
+}
+
+export async function deleteNotification(id: string): Promise<void> {
+  await api.delete(`/notifications/${id}`);
 }

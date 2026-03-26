@@ -64,3 +64,11 @@ export interface DeadLinkReportWithLink extends DeadLinkReport {
   linkTitle: string;
   linkUrl: string;
 }
+
+export interface Notification {
+  id: string;
+  title: string;
+  content: string;
+  badge: 'nouveau' | 'amélioration' | 'correction' | 'info';
+  createdAt: string;
+}

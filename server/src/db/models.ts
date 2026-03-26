@@ -87,8 +87,28 @@ const screenshotCacheSchema = new Schema<ScreenshotCacheDoc>(
 // Auto-expire après 7 jours
 screenshotCacheSchema.index({ cachedAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
 
+interface NotificationDoc {
+  id: string;
+  title: string;
+  content: string;
+  badge: 'nouveau' | 'amélioration' | 'correction' | 'info';
+  createdAt: string;
+}
+
+const notificationSchema = new Schema<NotificationDoc>(
+  {
+    id: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    content: { type: String, default: '' },
+    badge: { type: String, default: 'nouveau' },
+    createdAt: String,
+  },
+  { versionKey: false }
+);
+
 export const LinkModel = mongoose.model<Link>('Link', linkSchema);
 export const HealthModel = mongoose.model<HealthStatus>('HealthStatus', healthSchema);
 export const RatingModel = mongoose.model<RatingDoc>('Rating', ratingSchema);
 export const ReportModel = mongoose.model<DeadLinkReport>('DeadLinkReport', reportSchema);
 export const ScreenshotCacheModel = mongoose.model<ScreenshotCacheDoc>('ScreenshotCache', screenshotCacheSchema);
+export const NotificationModel = mongoose.model<NotificationDoc>('Notification', notificationSchema);

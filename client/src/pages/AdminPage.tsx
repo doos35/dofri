@@ -3,7 +3,7 @@ import SEO from '../components/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Edit3, RefreshCw, ExternalLink, Search,
-  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical
+  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical, Megaphone
 } from 'lucide-react';
 import { Link as LinkType, HealthStatus, RatingSummary, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
@@ -13,6 +13,7 @@ import LinkForm from '../admin/LinkForm';
 import NotificationPanel from '../components/admin/NotificationPanel';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import ImportLinks from '../components/admin/ImportLinks';
+import ManageNotifications from '../components/admin/ManageNotifications';
 
 export default function AdminPage() {
   const [links, setLinks] = useState<LinkType[]>([]);
@@ -29,6 +30,7 @@ export default function AdminPage() {
   const [ratings, setRatings] = useState<RatingSummary[]>([]);
   const [showDashboard, setShowDashboard] = useState(true);
   const [showImport, setShowImport] = useState(false);
+  const [showManageNotifs, setShowManageNotifs] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
@@ -286,6 +288,13 @@ export default function AdminPage() {
               Importer
             </button>
             <button
+              onClick={() => setShowManageNotifs(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+            >
+              <Megaphone className="w-4 h-4" />
+              Notifs
+            </button>
+            <button
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 gradient-bg text-white font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/20"
             >
@@ -486,6 +495,14 @@ export default function AdminPage() {
         <ImportLinks
           onDone={() => { setShowImport(false); loadData(); }}
           onCancel={() => setShowImport(false)}
+        />
+      </Modal>
+
+      {/* Manage Notifications Modal */}
+      <Modal isOpen={showManageNotifs} onClose={() => setShowManageNotifs(false)} title="Gérer les notifications">
+        <ManageNotifications
+          onDone={() => setShowManageNotifs(false)}
+          onCancel={() => setShowManageNotifs(false)}
         />
       </Modal>
 

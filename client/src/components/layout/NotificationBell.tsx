@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, ExternalLink, Sparkles } from 'lucide-react';
-import { useLinksContext } from '../../context/LinksContext';
+import { Bell, Sparkles, Wrench, Bug, Info } from 'lucide-react';
+import { Notification } from '../../types';
+import * as api from '../../api/linksApi';
 import { cn } from '../../utils/cn';
-import { Link } from '../../types';
 
 const STORAGE_KEY = 'dofri_notif_last_seen';
 
@@ -15,50 +15,54 @@ function setLastSeen(date: string) {
   localStorage.setItem(STORAGE_KEY, date);
 }
 
-/** Groupe les liens par date (jour) */
-function groupByDate(links: Link[]): { date: string; label: string; links: Link[] }[] {
-  const groups = new Map<string, Link[]>();
-  for (const link of links) {
-    const day = link.createdAt.slice(0, 10);
-    if (!groups.has(day)) groups.set(day, []);
-    groups.get(day)!.push(link);
-  }
+const BADGE_CONFIG: Record<Notification['badge'], { label: string; icon: typeof Sparkles; color: string }> = {
+  nouveau: { label: 'Nouveau', icon: Sparkles, color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+  amélioration: { label: 'Amélioration', icon: Wrench, color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
+  correction: { label: 'Correction', icon: Bug, color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
+  info: { label: 'Info', icon: Info, color: 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20' },
+};
 
-  return Array.from(groups.entries()).map(([day, links]) => ({
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/** Groupe les notifications par date */
+function groupByDate(notifs: Notification[]): { date: string; label: string; items: Notification[] }[] {
+  const groups = new Map<string, Notification[]>();
+  for (const n of notifs) {
+    const day = n.createdAt.slice(0, 10);
+    if (!groups.has(day)) groups.set(day, []);
+    groups.get(day)!.push(n);
+  }
+  return Array.from(groups.entries()).map(([day, items]) => ({
     date: day,
     label: formatDate(day),
-    links,
+    items,
   }));
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function daysSince(iso: string): number {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
-}
-
 export default function NotificationBell() {
-  const { links } = useLinksContext();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [lastSeen, setLastSeenState] = useState(getLastSeen);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Liens récents = ajoutés dans les 30 derniers jours, triés par date desc
-  const recentLinks = links
-    .filter(l => l.createdAt && daysSince(l.createdAt) <= 30)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const load = useCallback(async () => {
+    try {
+      const data = await api.fetchNotifications();
+      setNotifications(data);
+    } catch {}
+  }, []);
 
-  const unseenCount = recentLinks.filter(l => l.createdAt > lastSeen).length;
+  useEffect(() => { load(); }, [load]);
 
-  const grouped = groupByDate(recentLinks);
+  const unseenCount = notifications.filter(n => n.createdAt > lastSeen).length;
+  const grouped = groupByDate(notifications);
 
   const handleOpen = () => {
     setOpen(prev => !prev);
-    if (!open && recentLinks.length > 0) {
-      const newest = recentLinks[0].createdAt;
+    if (!open && notifications.length > 0) {
+      const newest = notifications[0].createdAt;
       setLastSeen(newest);
       setLastSeenState(newest);
     }
@@ -106,63 +110,56 @@ export default function NotificationBell() {
             {/* En-tête */}
             <div className="sticky top-0 bg-white dark:bg-gray-800 px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-700">
               <h3 className="text-base font-bold text-gray-900 dark:text-white">Nouveautés</h3>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Les derniers liens ajoutés sur DoFri</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Les dernières mises à jour de DoFri</p>
             </div>
 
             {/* Contenu */}
-            <div className="px-5 py-3 space-y-4">
+            <div className="px-5 py-3 space-y-5">
               {grouped.length === 0 ? (
                 <p className="text-sm text-gray-400 dark:text-gray-500 py-4 text-center">
-                  Aucun lien ajouté récemment
+                  Aucune notification
                 </p>
               ) : (
                 grouped.map(group => (
-                  <div key={group.date}>
-                    {/* Badge date */}
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <Sparkles className="w-3 h-3" />
-                        Nouveau
-                      </span>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{group.label}</span>
-                    </div>
+                  <div key={group.date} className="space-y-3">
+                    {group.items.map(notif => {
+                      const cfg = BADGE_CONFIG[notif.badge] || BADGE_CONFIG.nouveau;
+                      const Icon = cfg.icon;
+                      const lines = notif.content ? notif.content.split('\n').filter(l => l.trim()) : [];
 
-                    {/* Liens du jour */}
-                    <ul className="space-y-1.5 ml-1">
-                      {group.links.map(link => (
-                        <li key={link.id}>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group/item flex items-start gap-2 py-1 px-2 -mx-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                          >
-                            {link.icon ? (
-                              <img src={link.icon} alt="" className="w-4 h-4 mt-0.5 rounded object-contain flex-shrink-0" />
-                            ) : (
-                              <span className="w-1.5 h-1.5 mt-2 rounded-full bg-emerald-500 flex-shrink-0" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                                  {link.title}
-                                </span>
-                                <ExternalLink className="w-3 h-3 text-gray-300 dark:text-gray-600 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0" />
-                              </div>
-                              {link.description && (
-                                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{link.description}</p>
-                              )}
-                            </div>
+                      return (
+                        <div key={notif.id}>
+                          {/* Badge + date */}
+                          <div className="flex items-center gap-2 mb-1.5">
                             <span className={cn(
-                              'text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 mt-0.5',
-                              'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                              'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border',
+                              cfg.color
                             )}>
-                              {link.category}
+                              <Icon className="w-3 h-3" />
+                              {cfg.label}
                             </span>
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+                            <span className="text-xs text-gray-400 dark:text-gray-500">{group.label}</span>
+                          </div>
+
+                          {/* Titre */}
+                          <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                            {notif.title}
+                          </h4>
+
+                          {/* Contenu en puces */}
+                          {lines.length > 0 && (
+                            <ul className="space-y-0.5 ml-1">
+                              {lines.map((line, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                  <span className="w-1 h-1 mt-1.5 rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0" />
+                                  {line}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ))
               )}

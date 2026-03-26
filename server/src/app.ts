@@ -7,6 +7,7 @@ import healthRouter from './routes/health';
 import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import screenshotsRouter from './routes/screenshots';
+import notificationsRouter from './routes/notifications';
 import { errorHandler } from './middleware/errorHandler';
 import { generalLimiter } from './middleware/rateLimiter';
 
@@ -49,6 +50,7 @@ app.use('/api/links', linksRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/screenshots', screenshotsRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Serve client build in production
 const clientDist = path.join(__dirname, '../../client/dist');
