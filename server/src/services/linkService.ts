@@ -13,12 +13,16 @@ export async function getAllLinks(filters?: {
   const query: Record<string, unknown> = {};
 
   if (filters?.category) {
-    query.category = { $regex: new RegExp(`^${filters.category}$`, 'i') };
+    const escaped = filters.category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    query.category = { $regex: new RegExp(`^${escaped}$`, 'i') };
   }
 
   if (filters?.tags) {
     const filterTags = filters.tags.split(',').map(t => t.trim());
-    query.tags = { $in: filterTags.map(t => new RegExp(`^${t}$`, 'i')) };
+    query.tags = { $in: filterTags.map(t => {
+      const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`^${escaped}$`, 'i');
+    }) };
   }
 
   // Recherche : regex sur titre/description/url/tags (supporte les sous-chaînes)

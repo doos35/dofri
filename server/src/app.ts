@@ -18,9 +18,20 @@ app.set('trust proxy', 1);
 
 // Headers de sécurité
 app.use(helmet({
-  // CSP désactivé pour ne pas casser les ressources externes (Google Fonts, Microlink, favicons)
-  contentSecurityPolicy: false,
-  // Autoriser les iframes dans l'app (aperçu Microlink)
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", ...(process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',').map(o => o.trim()) : [])],
+      frameAncestors: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
 }));
 

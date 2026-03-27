@@ -19,15 +19,20 @@ router.get('/', async (_req: Request, res: Response) => {
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const { title, content, badge } = req.body;
-    if (!title) {
+    if (!title || typeof title !== 'string') {
       res.status(400).json({ error: 'Le titre est requis' });
       return;
     }
+    const allowedBadges = ['nouveau', 'amélioration', 'correction', 'info'];
+    const safeBadge = allowedBadges.includes(badge) ? badge : 'nouveau';
+    const safeTitle = title.slice(0, 200);
+    const safeContent = typeof content === 'string' ? content.slice(0, 2000) : '';
+
     const notification = await NotificationModel.create({
       id: uuid(),
-      title,
-      content: content || '',
-      badge: badge || 'nouveau',
+      title: safeTitle,
+      content: safeContent,
+      badge: safeBadge,
       createdAt: new Date().toISOString(),
     });
     res.status(201).json(notification);
