@@ -153,7 +153,7 @@ export default function AdminPage() {
 
         {/* Stats cards */}
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -259,7 +259,7 @@ export default function AdminPage() {
               className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 transition-all"
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={() => setShowNotifications(true)}
               className="relative inline-flex items-center justify-center w-11 h-11 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
@@ -275,31 +275,31 @@ export default function AdminPage() {
             <button
               onClick={handleHealthCheck}
               disabled={checking}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50 text-sm"
             >
               <RefreshCw className={`w-4 h-4 ${checking ? 'animate-spin' : ''}`} />
-              Vérifier santé
+              <span className="hidden xs:inline">Vérifier</span> santé
             </button>
             <button
               onClick={() => setShowImport(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+              className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm"
             >
               <Upload className="w-4 h-4" />
-              Importer
+              <span className="hidden sm:inline">Importer</span>
             </button>
             <button
               onClick={() => setShowManageNotifs(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+              className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-sm"
             >
               <Megaphone className="w-4 h-4" />
-              Notifs
+              <span className="hidden sm:inline">Notifs</span>
             </button>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 gradient-bg text-white font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/20"
+              className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 gradient-bg text-white font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/20 text-sm"
             >
               <Plus className="w-4 h-4" />
-              Ajouter
+              <span className="hidden sm:inline">Ajouter</span>
             </button>
           </div>
         </motion.div>

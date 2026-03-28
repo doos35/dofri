@@ -55,16 +55,35 @@ router.get('/', screenshotLimiter, async (req: Request, res: Response) => {
       return;
     }
 
-    // Récupérer depuis Microlink
-    const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
-    const response = await axios.get(microlinkUrl, {
+    // Étape 1 : appeler l'API Microlink en JSON pour obtenir l'URL du screenshot
+    const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false`;
+    const metaResponse = await axios.get(microlinkUrl, {
+      timeout: 20000,
+      responseType: 'json',
+    });
+
+    const screenshotImageUrl = metaResponse.data?.data?.screenshot?.url;
+    if (!screenshotImageUrl) {
+      res.status(502).json({ error: 'Impossible de récupérer la capture' });
+      return;
+    }
+
+    // Étape 2 : télécharger l'image depuis l'URL du screenshot
+    const imgResponse = await axios.get(screenshotImageUrl, {
       responseType: 'arraybuffer',
       timeout: 15000,
       maxContentLength: MAX_SCREENSHOT_SIZE,
     });
 
-    const contentType = response.headers['content-type'] || 'image/png';
-    const imageData = Buffer.from(response.data);
+    const contentType = imgResponse.headers['content-type'] || 'image/png';
+
+    // Vérifier que c'est bien une image
+    if (!contentType.startsWith('image/')) {
+      res.status(502).json({ error: 'Réponse non-image reçue' });
+      return;
+    }
+
+    const imageData = Buffer.from(imgResponse.data);
 
     if (imageData.length > MAX_SCREENSHOT_SIZE) {
       res.status(502).json({ error: 'Image trop volumineuse' });
