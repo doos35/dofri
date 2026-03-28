@@ -33,6 +33,7 @@ app.use(helmet({
     },
   },
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // CORS restreint à l'origine déclarée en variable d'environnement
