@@ -51,6 +51,12 @@ app.use(cors({
   credentials: true,
 }));
 
+// Bloquer le référencement par les moteurs de recherche
+app.use((_req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  next();
+});
+
 app.use(express.json({ limit: '1mb' }));
 
 // Rate limiting global

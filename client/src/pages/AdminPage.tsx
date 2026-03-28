@@ -156,7 +156,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-950">
-      <SEO title="Administration" description="Panneau d'administration DoFri" />
+      <SEO title="Administration" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div

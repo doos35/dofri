@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
-      <SEO title="Connexion" description="Connectez-vous à DoFri" />
+      <SEO title="Connexion" />
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 30 }}
