@@ -41,22 +41,22 @@ export async function fetchLinks(filters?: {
   if (filters?.tags) params.set('tags', filters.tags);
   if (filters?.sort) params.set('sort', filters.sort);
   const { data } = await api.get<Link[]>(`/links?${params.toString()}`);
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchCategories(): Promise<string[]> {
   const { data } = await api.get<string[]>('/links/categories');
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchTags(): Promise<{ tag: string; count: number }[]> {
   const { data } = await api.get<{ tag: string; count: number }[]>('/links/tags');
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchHealthStatuses(): Promise<HealthStatus[]> {
   const { data } = await api.get<HealthStatus[]>('/health');
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function createLink(linkData: CreateLinkDTO): Promise<Link> {
@@ -92,7 +92,7 @@ export async function toggleFavorite(id: string): Promise<Link> {
 export async function fetchRatings(visitorId?: string): Promise<RatingSummary[]> {
   const params = visitorId ? `?visitorId=${visitorId}` : '';
   const { data } = await api.get<RatingSummary[]>(`/links/ratings${params}`);
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function rateLink(linkId: string, visitorId: string, score: number): Promise<RatingSummary> {
@@ -140,7 +140,7 @@ export async function importLinks(links: Array<{
 // Notifications
 export async function fetchNotifications(): Promise<Notification[]> {
   const { data } = await api.get<Notification[]>('/notifications');
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function createNotification(payload: {
