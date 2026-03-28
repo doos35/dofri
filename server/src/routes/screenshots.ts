@@ -99,6 +99,7 @@ router.get('/', screenshotLimiter, async (req: Request, res: Response) => {
 
     res.set('Content-Type', cached.contentType);
     res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.send(cached.imageData);
   } catch {
     res.status(502).json({ error: 'Impossible de récupérer la capture' });
