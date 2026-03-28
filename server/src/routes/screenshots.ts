@@ -68,7 +68,7 @@ export async function generateScreenshot(url: string): Promise<boolean> {
     await ScreenshotCacheModel.findOneAndUpdate(
       { url },
       { url, imageData, contentType, cachedAt: new Date() },
-      { upsert: true }
+      { upsert: true, returnDocument: 'after' }
     );
 
     return true;

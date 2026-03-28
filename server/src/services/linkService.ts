@@ -123,7 +123,7 @@ export async function updateLink(id: string, data: UpdateLinkDTO): Promise<Link 
   const updated = await LinkModel.findOneAndUpdate(
     { id },
     { ...data, updatedAt: new Date().toISOString() },
-    { new: true, projection: PROJ }
+    { returnDocument: 'after', projection: PROJ }
   ).lean<Link>();
 
   if (urlChanged && updated) {
@@ -154,7 +154,7 @@ export async function toggleFavorite(id: string): Promise<Link | null> {
   const updated = await LinkModel.findOneAndUpdate(
     { id },
     { favorite: !link.favorite, updatedAt: new Date().toISOString() },
-    { new: true, projection: PROJ }
+    { returnDocument: 'after', projection: PROJ }
   ).lean<Link>();
 
   return updated ?? null;
@@ -164,7 +164,7 @@ export async function trackClick(id: string): Promise<Link | null> {
   const updated = await LinkModel.findOneAndUpdate(
     { id },
     { $inc: { clicks: 1 } },
-    { new: true, projection: PROJ }
+    { returnDocument: 'after', projection: PROJ }
   ).lean<Link>();
 
   return updated ?? null;
