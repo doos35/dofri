@@ -25,10 +25,11 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
   const [hasHovered, setHasHovered] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [reported, setReported] = useState(false);
 
   const apiBase = import.meta.env.VITE_API_URL || '/api';
-  const screenshotUrl = `${apiBase}/screenshots?url=${encodeURIComponent(link.url)}`;
+  const screenshotUrl = `${apiBase}/screenshots?url=${encodeURIComponent(link.url)}${retryCount > 0 ? `&_r=${retryCount}` : ''}`;
 
   const handleMouseEnter = () => {
     setHasHovered(true);
@@ -120,7 +121,13 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
                 imgLoaded ? 'opacity-100' : 'opacity-0'
               )}
               onLoad={() => setImgLoaded(true)}
-              onError={() => setImgError(true)}
+              onError={() => {
+                if (retryCount < 1) {
+                  setTimeout(() => setRetryCount(c => c + 1), 3000);
+                } else {
+                  setImgError(true);
+                }
+              }}
             />
           )}
           {imgLoaded && (
