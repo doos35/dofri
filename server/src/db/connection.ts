@@ -40,5 +40,15 @@ export async function connectDB(): Promise<void> {
   await mongoose.connect(uri);
   console.log('[DB] Connecté à MongoDB');
 
+  // Mettre à jour le TTL du cache screenshots (7j → 30j)
+  try {
+    await mongoose.connection.db!.command({
+      collMod: 'screenshotcaches',
+      index: { keyPattern: { cachedAt: 1 }, expireAfterSeconds: 30 * 24 * 60 * 60 },
+    });
+  } catch {
+    // Ignore si la collection n'existe pas encore
+  }
+
   await seedIfEmpty();
 }

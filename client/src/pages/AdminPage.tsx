@@ -3,7 +3,7 @@ import SEO from '../components/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Edit3, RefreshCw, ExternalLink, Search,
-  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical, Megaphone
+  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical, Megaphone, Camera
 } from 'lucide-react';
 import { Link as LinkType, HealthStatus, RatingSummary, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
@@ -31,6 +31,8 @@ export default function AdminPage() {
   const [showDashboard, setShowDashboard] = useState(true);
   const [showImport, setShowImport] = useState(false);
   const [showManageNotifs, setShowManageNotifs] = useState(false);
+  const [generatingScreenshots, setGeneratingScreenshots] = useState(false);
+  const [screenshotResult, setScreenshotResult] = useState<string | null>(null);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
@@ -95,6 +97,21 @@ export default function AdminPage() {
       console.error('Health check failed:', err);
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleGenerateScreenshots = async () => {
+    setGeneratingScreenshots(true);
+    setScreenshotResult(null);
+    try {
+      const result = await api.generateAllScreenshots();
+      setScreenshotResult(
+        `${result.generated} générés, ${result.errors} erreurs, ${result.alreadyCached} déjà en cache`
+      );
+    } catch {
+      setScreenshotResult('Erreur lors de la génération');
+    } finally {
+      setGeneratingScreenshots(false);
     }
   };
 
@@ -295,6 +312,15 @@ export default function AdminPage() {
               <span className="hidden sm:inline">Notifs</span>
             </button>
             <button
+              onClick={handleGenerateScreenshots}
+              disabled={generatingScreenshots}
+              className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50 text-sm"
+              title={screenshotResult || 'Générer les aperçus manquants'}
+            >
+              <Camera className={`w-4 h-4 ${generatingScreenshots ? 'animate-pulse' : ''}`} />
+              <span className="hidden sm:inline">{generatingScreenshots ? 'Génération...' : 'Aperçus'}</span>
+            </button>
+            <button
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 gradient-bg text-white font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/20 text-sm"
             >
@@ -303,6 +329,18 @@ export default function AdminPage() {
             </button>
           </div>
         </motion.div>
+
+        {/* Screenshot generation result */}
+        {screenshotResult && (
+          <motion.div
+            className="mb-4 px-4 py-3 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 text-sm text-primary-700 dark:text-primary-300 flex items-center justify-between"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <span>{screenshotResult}</span>
+            <button onClick={() => setScreenshotResult(null)} className="text-primary-500 hover:text-primary-700 dark:hover:text-primary-200 ml-3">&times;</button>
+          </motion.div>
+        )}
 
         {/* Links table */}
         <motion.div

@@ -155,3 +155,14 @@ export async function createNotification(payload: {
 export async function deleteNotification(id: string): Promise<void> {
   await api.delete(`/notifications/${id}`);
 }
+
+// Screenshots
+export async function generateAllScreenshots(): Promise<{
+  total: number;
+  generated: number;
+  errors: number;
+  alreadyCached: number;
+}> {
+  const { data } = await api.post('/screenshots/generate-all');
+  return data;
+}

@@ -5,6 +5,7 @@ import * as reportService from '../services/reportService';
 import { validateCreateLink, validateUpdateLink } from '../middleware/validateLink';
 import { requireAuth } from '../middleware/auth';
 import { actionLimiter, clickLimiter } from '../middleware/rateLimiter';
+import { generateScreenshot } from './screenshots';
 
 const router = Router();
 
@@ -187,6 +188,8 @@ router.put('/reorder', requireAuth, async (req: Request, res: Response) => {
 router.post('/', requireAuth, validateCreateLink, async (req: Request, res: Response) => {
   try {
     const link = await linkService.createLink(req.body);
+    // Fire-and-forget : générer le screenshot en arrière-plan
+    generateScreenshot(link.url).catch(() => {});
     res.status(201).json(link);
   } catch (err) {
     res.status(500).json({ error: 'Erreur lors de la création du lien' });
@@ -200,6 +203,8 @@ router.put('/:id', requireAuth, validateUpdateLink, async (req: Request, res: Re
       res.status(404).json({ error: 'Lien non trouvé' });
       return;
     }
+    // Fire-and-forget : régénérer le screenshot si l'URL a changé
+    generateScreenshot(link.url).catch(() => {});
     res.json(link);
   } catch (err) {
     res.status(500).json({ error: 'Erreur lors de la mise à jour du lien' });

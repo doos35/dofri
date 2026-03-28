@@ -84,8 +84,8 @@ const screenshotCacheSchema = new Schema<ScreenshotCacheDoc>(
   { versionKey: false }
 );
 
-// Auto-expire après 7 jours
-screenshotCacheSchema.index({ cachedAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
+// Auto-expire après 30 jours
+screenshotCacheSchema.index({ cachedAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
 interface NotificationDoc {
   id: string;
