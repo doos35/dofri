@@ -36,7 +36,9 @@ interface EmojiPickerProps {
 export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
   const [open, setOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(0);
+  const [popupLeft, setPopupLeft] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -49,9 +51,24 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const POPUP_W = 288;
+    const PADDING = 8;
+    const trigger = triggerRef.current.getBoundingClientRect();
+    const parent = triggerRef.current.parentElement?.getBoundingClientRect();
+    if (!parent) return;
+    let viewportLeft = trigger.left + trigger.width / 2 - POPUP_W / 2;
+    const vw = window.innerWidth;
+    if (viewportLeft < PADDING) viewportLeft = PADDING;
+    else if (viewportLeft + POPUP_W > vw - PADDING) viewportLeft = vw - PADDING - POPUP_W;
+    setPopupLeft(viewportLeft - parent.left);
+  }, [open]);
+
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="p-2 rounded-xl text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
@@ -66,7 +83,8 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-50"
+            style={{ left: popupLeft }}
+            className="absolute bottom-full mb-2 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden z-50"
           >
             <div className="flex border-b border-gray-100 dark:border-gray-700 overflow-x-auto">
               {CATEGORIES.map((cat, i) => (
