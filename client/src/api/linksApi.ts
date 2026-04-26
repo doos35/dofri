@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Link, HealthStatus, CreateLinkDTO, UpdateLinkDTO, RatingSummary, DeadLinkReportWithLink, Notification } from '../types';
+import { Link, HealthStatus, CreateLinkDTO, UpdateLinkDTO, RatingSummary, DeadLinkReportWithLink, Notification, Discussion, DiscussionWithMessages, Message } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 const api = axios.create({ baseURL: BASE_URL });
@@ -164,5 +164,48 @@ export async function generateAllScreenshots(): Promise<{
   alreadyCached: number;
 }> {
   const { data } = await api.post('/screenshots/generate-all');
+  return data;
+}
+
+// Discussions
+export async function fetchDiscussions(): Promise<Discussion[]> {
+  const { data } = await api.get<Discussion[]>('/discussions');
+  return Array.isArray(data) ? data : [];
+}
+
+export async function fetchDiscussion(id: string): Promise<DiscussionWithMessages> {
+  const { data } = await api.get<DiscussionWithMessages>(`/discussions/${id}`);
+  return data;
+}
+
+export async function createDiscussion(payload: {
+  title: string;
+  authorName: string;
+  authorId: string;
+  content: string;
+}): Promise<Discussion> {
+  const { data } = await api.post<Discussion>('/discussions', payload);
+  return data;
+}
+
+export async function postMessage(discussionId: string, payload: {
+  authorName: string;
+  authorId: string;
+  content: string;
+}): Promise<Message> {
+  const { data } = await api.post<Message>(`/discussions/${discussionId}/messages`, payload);
+  return data;
+}
+
+export async function deleteDiscussion(id: string): Promise<void> {
+  await api.delete(`/discussions/${id}`);
+}
+
+export async function deleteMessage(discussionId: string, messageId: string): Promise<void> {
+  await api.delete(`/discussions/${discussionId}/messages/${messageId}`);
+}
+
+export async function togglePinDiscussion(id: string): Promise<Discussion> {
+  const { data } = await api.patch<Discussion>(`/discussions/${id}/pin`);
   return data;
 }

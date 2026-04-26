@@ -7,6 +7,8 @@ import HomePage from './pages/HomePage';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import NotFoundPage from './pages/NotFoundPage';
+import DiscussionsPage from './pages/DiscussionsPage';
+import DiscussionDetailPage from './pages/DiscussionDetailPage';
 import { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -37,6 +39,8 @@ export default function App() {
               <Header />
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/discussions" element={<DiscussionsPage />} />
+                <Route path="/discussions/:id" element={<DiscussionDetailPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route
                   path="/admin"

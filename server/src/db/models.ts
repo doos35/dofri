@@ -112,9 +112,61 @@ const notificationSchema = new Schema<NotificationDoc>(
   { versionKey: false }
 );
 
+interface DiscussionDoc {
+  id: string;
+  title: string;
+  authorName: string;
+  authorId: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+  lastMessageAt: string;
+  pinned: boolean;
+}
+
+const discussionSchema = new Schema<DiscussionDoc>(
+  {
+    id: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    authorName: { type: String, required: true },
+    authorId: { type: String, required: true },
+    createdAt: { type: String, required: true },
+    updatedAt: { type: String, required: true },
+    messageCount: { type: Number, default: 0 },
+    lastMessageAt: { type: String, required: true },
+    pinned: { type: Boolean, default: false },
+  },
+  { versionKey: false }
+);
+discussionSchema.index({ pinned: -1, lastMessageAt: -1 });
+
+interface MessageDoc {
+  id: string;
+  discussionId: string;
+  authorName: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+}
+
+const messageSchema = new Schema<MessageDoc>(
+  {
+    id: { type: String, required: true, unique: true },
+    discussionId: { type: String, required: true },
+    authorName: { type: String, required: true },
+    authorId: { type: String, required: true },
+    content: { type: String, required: true },
+    createdAt: { type: String, required: true },
+  },
+  { versionKey: false }
+);
+messageSchema.index({ discussionId: 1, createdAt: 1 });
+
 export const LinkModel = mongoose.model<Link>('Link', linkSchema);
 export const HealthModel = mongoose.model<HealthStatus>('HealthStatus', healthSchema);
 export const RatingModel = mongoose.model<RatingDoc>('Rating', ratingSchema);
 export const ReportModel = mongoose.model<DeadLinkReport>('DeadLinkReport', reportSchema);
 export const ScreenshotCacheModel = mongoose.model<ScreenshotCacheDoc>('ScreenshotCache', screenshotCacheSchema);
 export const NotificationModel = mongoose.model<NotificationDoc>('Notification', notificationSchema);
+export const DiscussionModel = mongoose.model<DiscussionDoc>('Discussion', discussionSchema);
+export const MessageModel = mongoose.model<MessageDoc>('Message', messageSchema);

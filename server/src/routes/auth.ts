@@ -6,9 +6,6 @@ import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME!;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!;
 
 /** Comparaison à temps constant pour éviter les timing attacks */
 function timingSafeEqual(a: string, b: string): boolean {
@@ -40,12 +37,12 @@ router.post('/login', loginLimiter, (req: Request, res: Response) => {
     return;
   }
 
-  if (!timingSafeEqual(username, ADMIN_USERNAME) || !timingSafeEqual(password, ADMIN_PASSWORD)) {
+  if (!timingSafeEqual(username, process.env.ADMIN_USERNAME!) || !timingSafeEqual(password, process.env.ADMIN_PASSWORD!)) {
     res.status(401).json({ error: 'Identifiants incorrects' });
     return;
   }
 
-  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '8h' });
+  const token = jwt.sign({ username }, process.env.JWT_SECRET!, { expiresIn: '8h' });
 
   res.json({ token, username });
 });

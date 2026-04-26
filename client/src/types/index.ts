@@ -75,3 +75,28 @@ export interface Notification {
   linkUrl?: string;
   createdAt: string;
 }
+
+export interface Discussion {
+  id: string;
+  title: string;
+  authorName: string;
+  authorId: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+  lastMessageAt: string;
+  pinned: boolean;
+}
+
+export interface Message {
+  id: string;
+  discussionId: string;
+  authorName: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface DiscussionWithMessages extends Discussion {
+  messages: Message[];
+}
