@@ -147,6 +147,7 @@ interface MessageDoc {
   authorId: string;
   content: string;
   createdAt: string;
+  editedAt?: string;
 }
 
 const messageSchema = new Schema<MessageDoc>(
@@ -157,6 +158,7 @@ const messageSchema = new Schema<MessageDoc>(
     authorId: { type: String, required: true },
     content: { type: String, required: true },
     createdAt: { type: String, required: true },
+    editedAt: { type: String, default: '' },
   },
   { versionKey: false }
 );

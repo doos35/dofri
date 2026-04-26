@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Plus, Pin, Trash2, Loader2, Clock, Users } from 'lucide-react';
@@ -11,6 +11,7 @@ import { getVisitorId } from '../utils/visitorId';
 import Modal from '../components/ui/Modal';
 import ToastContainer from '../components/ui/Toast';
 import BackToTop from '../components/ui/BackToTop';
+import EmojiPicker from '../components/ui/EmojiPicker';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -39,6 +40,24 @@ export default function DiscussionsPage() {
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formPseudo, setFormPseudo] = useState(pseudo);
+  const formContentRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertEmoji = (emoji: string) => {
+    const el = formContentRef.current;
+    if (!el) {
+      setFormContent(formContent + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? formContent.length;
+    const end = el.selectionEnd ?? formContent.length;
+    const next = formContent.slice(0, start) + emoji + formContent.slice(end);
+    setFormContent(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + emoji.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -297,15 +316,21 @@ export default function DiscussionsPage() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Premier message
             </label>
-            <textarea
-              value={formContent}
-              onChange={(e) => setFormContent(e.target.value)}
-              maxLength={4000}
-              rows={5}
-              placeholder="Lance la discussion..."
-              className="w-full px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-              required
-            />
+            <div className="relative">
+              <textarea
+                ref={formContentRef}
+                value={formContent}
+                onChange={(e) => setFormContent(e.target.value)}
+                maxLength={4000}
+                rows={5}
+                placeholder="Lance la discussion..."
+                className="w-full px-3 py-2 pr-12 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                required
+              />
+              <div className="absolute bottom-2 right-2">
+                <EmojiPicker onSelect={insertEmoji} />
+              </div>
+            </div>
             <p className="text-xs text-gray-400 mt-1 text-right">{formContent.length}/4000</p>
           </div>
           <div className="flex gap-2 pt-2">

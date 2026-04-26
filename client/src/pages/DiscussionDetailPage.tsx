@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Loader2, Trash2, Clock, MessageCircle, Pin } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Trash2, Clock, MessageCircle, Pin, Pencil, Check, X } from 'lucide-react';
 import * as api from '../api/linksApi';
 import { DiscussionWithMessages, Message } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import { useToast } from '../hooks/useToast';
 import { usePseudo } from '../hooks/usePseudo';
 import { getVisitorId } from '../utils/visitorId';
 import ToastContainer from '../components/ui/Toast';
+import EmojiPicker from '../components/ui/EmojiPicker';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -46,7 +47,14 @@ export default function DiscussionDetailPage() {
   const [content, setContent] = useState('');
   const [author, setAuthor] = useState(pseudo);
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const visitorId = getVisitorId();
 
   const load = async () => {
     if (!id) return;
@@ -69,6 +77,28 @@ export default function DiscussionDetailPage() {
     setAuthor(pseudo);
   }, [pseudo]);
 
+  const insertAtCaret = (
+    ref: React.RefObject<HTMLTextAreaElement>,
+    current: string,
+    setter: (v: string) => void,
+    text: string
+  ) => {
+    const el = ref.current;
+    if (!el) {
+      setter(current + text);
+      return;
+    }
+    const start = el.selectionStart ?? current.length;
+    const end = el.selectionEnd ?? current.length;
+    const next = current.slice(0, start) + text + current.slice(end);
+    setter(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + text.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id || !discussion) return;
@@ -82,7 +112,7 @@ export default function DiscussionDetailPage() {
       setPseudo(name);
       const message = await api.postMessage(id, {
         authorName: name,
-        authorId: getVisitorId(),
+        authorId: visitorId,
         content: txt,
       });
       setDiscussion({
@@ -113,6 +143,40 @@ export default function DiscussionDetailPage() {
       addToast('Message supprimé');
     } catch {
       addToast('Erreur lors de la suppression', 'error');
+    }
+  };
+
+  const startEdit = (msg: Message) => {
+    setEditingId(msg.id);
+    setEditContent(msg.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditContent('');
+  };
+
+  const saveEdit = async (messageId: string) => {
+    if (!id || !discussion) return;
+    const txt = editContent.trim();
+    if (!txt) return addToast('Le message ne peut pas être vide', 'error');
+
+    setSavingEdit(true);
+    try {
+      const updated = await api.updateMessage(id, messageId, {
+        authorId: visitorId,
+        content: txt,
+      });
+      setDiscussion({
+        ...discussion,
+        messages: discussion.messages.map((m) => (m.id === messageId ? updated : m)),
+      });
+      cancelEdit();
+      addToast('Message modifié');
+    } catch (err: any) {
+      addToast(err?.response?.data?.error || 'Erreur lors de la modification', 'error');
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -159,44 +223,109 @@ export default function DiscussionDetailPage() {
 
         <div className="space-y-4 mb-8">
           <AnimatePresence initial={false}>
-            {discussion.messages.map((msg: Message) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex gap-3"
-                layout
-              >
-                <div
-                  className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colorForName(msg.authorName)} flex items-center justify-center text-white font-semibold text-sm`}
+            {discussion.messages.map((msg: Message) => {
+              const isOwn = msg.authorId === visitorId;
+              const canEdit = isOwn || isAuthenticated;
+              const isEditing = editingId === msg.id;
+              return (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex gap-3"
+                  layout
                 >
-                  {msg.authorName.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                      {msg.authorName}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {formatDate(msg.createdAt)}
-                    </span>
-                    {isAuthenticated && (
-                      <button
-                        onClick={() => handleDeleteMessage(msg.id)}
-                        className="ml-auto p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                  <div
+                    className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colorForName(msg.authorName)} flex items-center justify-center text-white font-semibold text-sm`}
+                  >
+                    {msg.authorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                        {msg.authorName}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {formatDate(msg.createdAt)}
+                      </span>
+                      {msg.editedAt && (
+                        <span className="text-xs text-gray-400 italic" title={`Modifié le ${formatDate(msg.editedAt)}`}>
+                          (modifié)
+                        </span>
+                      )}
+                      {!isEditing && (
+                        <div className="ml-auto flex items-center gap-0.5">
+                          {canEdit && (
+                            <button
+                              onClick={() => startEdit(msg)}
+                              className="p-1 rounded-md text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {isAuthenticated && (
+                            <button
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-gray-800 border border-primary-300 dark:border-primary-700 p-2 space-y-2">
+                        <textarea
+                          ref={editTextareaRef}
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          maxLength={4000}
+                          rows={3}
+                          autoFocus
+                          className="w-full px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') cancelEdit();
+                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) saveEdit(msg.id);
+                          }}
+                        />
+                        <div className="flex items-center justify-between">
+                          <EmojiPicker
+                            onSelect={(emoji) =>
+                              insertAtCaret(editTextareaRef, editContent, setEditContent, emoji)
+                            }
+                          />
+                          <div className="flex gap-1.5">
+                            <button
+                              onClick={cancelEdit}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              Annuler
+                            </button>
+                            <button
+                              onClick={() => saveEdit(msg.id)}
+                              disabled={savingEdit}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs gradient-bg text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                            >
+                              {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                              Enregistrer
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                        {msg.content}
+                      </div>
                     )}
                   </div>
-                  <div className="rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-                    {msg.content}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
           <div ref={bottomRef} />
         </div>
@@ -216,6 +345,7 @@ export default function DiscussionDetailPage() {
           />
           <div className="flex gap-2 items-end">
             <textarea
+              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               maxLength={4000}
@@ -228,6 +358,9 @@ export default function DiscussionDetailPage() {
                 }
               }}
               required
+            />
+            <EmojiPicker
+              onSelect={(emoji) => insertAtCaret(textareaRef, content, setContent, emoji)}
             />
             <button
               type="submit"

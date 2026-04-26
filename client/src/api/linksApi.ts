@@ -205,6 +205,14 @@ export async function deleteMessage(discussionId: string, messageId: string): Pr
   await api.delete(`/discussions/${discussionId}/messages/${messageId}`);
 }
 
+export async function updateMessage(discussionId: string, messageId: string, payload: {
+  authorId: string;
+  content: string;
+}): Promise<Message> {
+  const { data } = await api.patch<Message>(`/discussions/${discussionId}/messages/${messageId}`, payload);
+  return data;
+}
+
 export async function togglePinDiscussion(id: string): Promise<Discussion> {
   const { data } = await api.patch<Discussion>(`/discussions/${id}/pin`);
   return data;

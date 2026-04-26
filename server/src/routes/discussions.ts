@@ -1,8 +1,20 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuid } from 'uuid';
+import jwt from 'jsonwebtoken';
 import { DiscussionModel, MessageModel } from '../db/models';
 import { requireAuth } from '../middleware/auth';
 import { actionLimiter } from '../middleware/rateLimiter';
+
+function isAdminRequest(req: Request): boolean {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) return false;
+  try {
+    jwt.verify(header.split(' ')[1], process.env.JWT_SECRET!);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const router = Router();
 
@@ -143,6 +155,38 @@ router.post('/:id/messages', actionLimiter, async (req: Request, res: Response) 
     res.status(201).json(message);
   } catch {
     res.status(500).json({ error: "Erreur lors de l'envoi du message" });
+  }
+});
+
+// Public — éditer son propre message (admin peut éditer n'importe lequel)
+router.patch('/:id/messages/:messageId', actionLimiter, async (req: Request, res: Response) => {
+  try {
+    const { id, messageId } = req.params;
+    const message = await MessageModel.findOne({ id: messageId, discussionId: id });
+    if (!message) {
+      res.status(404).json({ error: 'Message non trouvé' });
+      return;
+    }
+
+    const admin = isAdminRequest(req);
+    const authorId = clean(req.body.authorId, 100);
+    if (!admin && (!authorId || authorId !== message.authorId)) {
+      res.status(403).json({ error: 'Tu ne peux modifier que tes propres messages' });
+      return;
+    }
+
+    const content = clean(req.body.content, MAX_CONTENT);
+    if (!content) {
+      res.status(400).json({ error: 'Le message ne peut pas être vide' });
+      return;
+    }
+
+    message.content = content;
+    message.editedAt = new Date().toISOString();
+    await message.save();
+    res.json(message);
+  } catch {
+    res.status(500).json({ error: "Erreur lors de la modification du message" });
   }
 });
 

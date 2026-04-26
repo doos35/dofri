@@ -94,6 +94,7 @@ export interface Message {
   authorId: string;
   content: string;
   createdAt: string;
+  editedAt?: string;
 }
 
 export interface DiscussionWithMessages extends Discussion {
