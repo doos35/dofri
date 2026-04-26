@@ -61,15 +61,6 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
     } catch {}
   };
 
-  const statusColor = {
-    ok: 'border-emerald-200 hover:border-emerald-300 dark:border-emerald-800 dark:hover:border-emerald-700',
-    slow: 'border-amber-200 hover:border-amber-300 dark:border-amber-800 dark:hover:border-amber-700',
-    dead: 'border-red-200 hover:border-red-300 dark:border-red-800 dark:hover:border-red-700',
-    unknown: 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
-  };
-
-  const status = health?.status || 'unknown';
-
   return (
     <motion.a
       href={link.url}
@@ -79,8 +70,7 @@ export default function LinkCard({ link, health, rating, onRatingChange, onEdit,
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        'group block p-5 rounded-2xl bg-white dark:bg-gray-800 border-2 shadow-sm hover:shadow-xl dark:shadow-black/20 transition-shadow duration-300 cursor-pointer relative overflow-hidden',
-        statusColor[status],
+        'group block p-5 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600 shadow-sm hover:shadow-xl dark:shadow-black/20 transition-shadow duration-300 cursor-pointer relative overflow-hidden',
         link.favorite && 'ring-2 ring-amber-200/50 dark:ring-amber-700/40'
       )}
       initial={{ opacity: 0, y: 20 }}
