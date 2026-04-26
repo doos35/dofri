@@ -10,6 +10,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import DiscussionsPage from './pages/DiscussionsPage';
 import DiscussionDetailPage from './pages/DiscussionDetailPage';
 import FreetchPage from './pages/FreetchPage';
+import PromoPage from './pages/PromoPage';
 import { ReactNode } from 'react';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -43,6 +44,7 @@ export default function App() {
                 <Route path="/discussions" element={<DiscussionsPage />} />
                 <Route path="/discussions/:id" element={<DiscussionDetailPage />} />
                 <Route path="/freetch" element={<FreetchPage />} />
+                <Route path="/promo" element={<PromoPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route
                   path="/admin"

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, Home, LogIn, LogOut, Sun, Moon, MessageCircle, Sparkles } from 'lucide-react';
+import { Settings, Home, LogIn, LogOut, Sun, Moon, MessageCircle, Sparkles, Tag } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,7 +15,8 @@ export default function Header() {
   const isLogin = location.pathname === '/login';
   const isDiscussions = location.pathname.startsWith('/discussions');
   const isFreetch = location.pathname === '/freetch';
-  const isHome = !isAdmin && !isLogin && !isDiscussions && !isFreetch;
+  const isPromo = location.pathname === '/promo';
+  const isHome = !isAdmin && !isLogin && !isDiscussions && !isFreetch && !isPromo;
 
   const handleLogout = () => {
     logout();
@@ -93,6 +94,19 @@ export default function Header() {
             >
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Freetch</span>
+            </Link>
+
+            <Link
+              to="/promo"
+              className={cn(
+                'flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+                isPromo
+                  ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              )}
+            >
+              <Tag className="w-4 h-4" />
+              <span className="hidden sm:inline">Promo</span>
             </Link>
 
             {isAuthenticated ? (
