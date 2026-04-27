@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:test2-fawn-eta.vercel.app)",
+      "mcp__Claude_in_Chrome__list_connected_browsers",
+      "Bash(curl -s https://test2-fawn-eta.vercel.app/)",
+      "Bash(curl -s https://test2-fawn-eta.vercel.app/ -o /tmp/freetch_source.html)",
+      "Read(//tmp/**)",
+      "Bash(curl -s https://test2-fawn-eta.vercel.app/ -o \"C:/Users/alexi/AppData/Local/Temp/freetch_source.html\")",
+      "Read(//c/Users/alexi/AppData/Local/Temp/**)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(npx vite *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano -p tcp)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5173,5174,5175 -ErrorAction SilentlyContinue)",
+      "Bash(curl -sL -o /dev/null -w \"URL final: %{url_effective}\\\\nCode HTTP: %{http_code}\\\\n\" \"https://id.twitch.tv/oauth2/authorize?client_id=l1et8ng6tikqygf4jcdc3upfhg1vn2&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Ffreetch&response_type=token&scope=user:read:follows\")",
+      "Bash(curl -sL -o /dev/null -w \"URL final: %{url_effective}\\\\nCode: %{http_code}\\\\n\" \"https://id.twitch.tv/oauth2/authorize?client_id=l1et8ng6tikqygf4jcdc3upfhg1vn2&redirect_uri=https%3A%2F%2Fevil.example.com%2Ffake&response_type=token&scope=user:read:follows\")",
+      "Bash(curl -s \"https://id.twitch.tv/oauth2/authorize?client_id=l1et8ng6tikqygf4jcdc3upfhg1vn2&redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Ffreetch&response_type=token&scope=user:read:follows\")",
+      "Bash(grep -oE '\\(error|redirect|invalid\\)[^<]{0,100}')"
+    ]
+  }
+}
