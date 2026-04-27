@@ -35,7 +35,16 @@ const STYLES = `
   .freetch-sidebar { width: 100%; max-height: 280px; position: static; order: 2; }
   .freetch-main { order: 1; width: 100%; }
 }
+.freetch-root .player-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.freetch-root .player-row > #video-container { flex: 1; min-width: 0; margin-bottom: 0 !important; }
 .freetch-root #video-container { width: 100%; margin-bottom: 20px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 12px; overflow: hidden; position: relative; }
+.freetch-root #chat-side-panel { width: 340px; flex-shrink: 0; background: #18181b; border-radius: 12px; overflow: hidden; display: none; border: 1px solid #333; min-height: 480px; }
+.freetch-root #chat-side-panel.active { display: block; }
+.freetch-root #chat-side-panel iframe { width: 100%; height: 100%; min-height: 480px; border: none; display: block; }
+@media (max-width: 1100px) {
+  .freetch-root .player-row { flex-direction: column; }
+  .freetch-root #chat-side-panel { width: 100%; min-height: 400px; }
+}
 .freetch-root .plyr { --plyr-color-main: #9146ff; --plyr-video-control-color: #efeff1; --plyr-video-control-background-hover: rgba(255, 255, 255, 0.15); --plyr-menu-background: #18181b; --plyr-menu-color: #efeff1; font-family: 'Inter', sans-serif; border-radius: 12px !important; }
 .freetch-root .plyr--video .plyr__control--overlaid { background: rgba(0, 0, 0, 0.6); border-radius: 12px; }
 .freetch-root .plyr--video .plyr__control--overlaid:hover { background: #9146ff; }
@@ -45,6 +54,19 @@ const STYLES = `
 .freetch-root #chat-toggle-btn:hover { background: var(--primary); border-color: var(--primary); }
 .freetch-root #langSelect { background: #26262c; border: 1px solid #3a3a40; color: #888; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; width: auto !important; min-width: 60px; }
 .freetch-root h1 { font-weight: 800; margin-bottom: 20px; color: #bf94ff; font-size: 1.5rem; margin-top: 0; }
+.freetch-root .banner-wrap { position: relative; margin: -10px 0 20px; }
+.freetch-root .freetch-banner { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 20px rgba(145, 70, 255, 0.25); }
+.freetch-root .banner-search { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(48%, 460px); display: flex; gap: 8px; background: rgba(14, 14, 16, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+.freetch-root .banner-search > div { position: relative; flex: 1; display: flex; min-width: 0; }
+.freetch-root .banner-search input[type="text"] { background: rgba(38, 38, 44, 0.7); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 9px 12px; border-radius: 8px; flex: 1; min-width: 0; font-size: 0.9rem; }
+.freetch-root .banner-search input[type="text"]:focus { outline: none; border-color: var(--primary); background: rgba(38, 38, 44, 0.9); }
+.freetch-root .banner-search input[type="text"]::placeholder { color: rgba(255,255,255,0.55); }
+.freetch-root .banner-search button.btn-primary { padding: 9px 14px; font-size: 0.85rem; flex-shrink: 0; }
+@media (max-width: 700px) {
+  .freetch-root .banner-search { left: 50%; transform: translate(-50%, -50%); width: calc(100% - 20px); padding: 6px; }
+  .freetch-root .banner-search input[type="text"] { padding: 7px 10px; font-size: 0.8rem; }
+  .freetch-root .banner-search button.btn-primary { padding: 7px 10px; font-size: 0.8rem; }
+}
 .freetch-root .mobile-only { display: none; }
 .freetch-root #mobile-alert { display: none; background: rgba(145, 70, 255, 0.15); border: 1px solid var(--primary); color: #e0ccff; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
 .freetch-root .tabs { display: flex; gap: 10px; margin-bottom: 20px; background: #26262c; padding: 5px; border-radius: 12px; }
@@ -391,7 +413,7 @@ export default function FreetchPage() {
 
       function playFromDiscovery(channelName: string) {
         ($('channelInput') as HTMLInputElement).value = channelName;
-        switchTab('channel');
+        switchTab('discovery');
         searchStreamer(true);
       }
 
@@ -462,15 +484,9 @@ export default function FreetchPage() {
         if (tab === 'discovery') {
           (root.querySelector('.tabs .tab-btn:nth-child(1)') as HTMLElement).classList.add('active');
           ($('tab-discovery') as HTMLElement).classList.add('active');
-          elementsCache.vodList.style.display = 'none';
-          elementsCache.liveArea.innerHTML = '';
           if (($('discovery-followed') as HTMLElement).innerHTML === '') loadDiscovery();
-        } else if (tab === 'channel') {
-          (root.querySelector('.tabs .tab-btn:nth-child(2)') as HTMLElement).classList.add('active');
-          ($('tab-channel') as HTMLElement).classList.add('active');
-          if (elementsCache.vodList.children.length > 0) elementsCache.vodList.style.display = 'grid';
         } else {
-          (root.querySelector('.tabs .tab-btn:nth-child(3)') as HTMLElement).classList.add('active');
+          (root.querySelector('.tabs .tab-btn:nth-child(2)') as HTMLElement).classList.add('active');
           ($('tab-direct') as HTMLElement).classList.add('active');
           elementsCache.vodList.style.display = 'none';
           elementsCache.liveArea.innerHTML = '';
@@ -493,6 +509,7 @@ export default function FreetchPage() {
         const parts = rawInput.split(' ');
         const channelName = parts[0];
         const searchKeyword = parts.slice(1).join(' ').toLowerCase();
+        switchTab('discovery');
         setStatus('loading', 'loading'); elementsCache.vodList.style.display = 'none'; elementsCache.liveArea.innerHTML = ''; hidePlayer();
         try {
           const [resVods, resLive] = await Promise.all([
@@ -551,12 +568,10 @@ export default function FreetchPage() {
           const data = await response.json();
           if (data.error) return setStatus(data.error, 'error');
           const domain = window.location.hostname || 'localhost';
-          const chatDiv = $('chat-overlay') as HTMLElement | null;
-          if (chatDiv) {
-            chatDiv.innerHTML = `<iframe src="https://www.twitch.tv/embed/${channelName}/chat?parent=${domain}&darkpopout" height="100%" width="100%" frameborder="0" scrolling="no"></iframe>`;
-            chatDiv.style.display = 'block';
-            chatDiv.classList.add('active');
-            const tBtn = $('chat-toggle-btn'); if (tBtn) tBtn.style.display = 'block';
+          const chatPanel = $('chat-side-panel') as HTMLElement | null;
+          if (chatPanel) {
+            chatPanel.innerHTML = `<iframe src="https://www.twitch.tv/embed/${channelName}/chat?parent=${domain}&darkpopout" frameborder="0" scrolling="no"></iframe>`;
+            chatPanel.classList.add('active');
           }
           currentVodId = null; setupPlayer(data.links); setStatus('Live: ' + data.title, 'success'); scrollToPlayer();
         } catch (e) { setStatus('err_live', 'error'); }
@@ -568,8 +583,8 @@ export default function FreetchPage() {
           const response = await fetch(`${API_URL}/api/get-m3u8?id=${id}&proxy=${useProxy}`);
           const data = await response.json();
           if (data.error) return setStatus(data.error, 'error');
-          const chatDiv = $('chat-overlay') as HTMLElement | null;
-          if (chatDiv) { chatDiv.innerHTML = ''; chatDiv.style.display = 'none'; chatDiv.classList.remove('active'); const tBtn = $('chat-toggle-btn'); if (tBtn) tBtn.style.display = 'none'; }
+          const chatPanel = $('chat-side-panel') as HTMLElement | null;
+          if (chatPanel) { chatPanel.innerHTML = ''; chatPanel.classList.remove('active'); }
           saveToHistory(id, 'vod', title || `VOD ${id}`, { thumb, streamer });
           currentVodId = id; isNewVodLoad = true; setupPlayer(data.links); setStatus(title ? title : 'vod_ready', 'success'); scrollToPlayer();
         } catch (e) { setStatus('err_conn', 'error'); }
@@ -637,8 +652,8 @@ export default function FreetchPage() {
         elementsCache.vlcSection.style.display = 'none';
         if (hls) hls.destroy();
         if (player) player.stop();
-        const chatDiv = $('chat-overlay') as HTMLElement | null;
-        if (chatDiv) { chatDiv.innerHTML = ''; const tBtn = $('chat-toggle-btn'); if (tBtn) tBtn.style.display = 'none'; }
+        const chatPanel = $('chat-side-panel') as HTMLElement | null;
+        if (chatPanel) { chatPanel.innerHTML = ''; chatPanel.classList.remove('active'); }
       }
 
       function togglePiP() {
@@ -749,9 +764,7 @@ export default function FreetchPage() {
       ($('proxyToggle') as HTMLInputElement).addEventListener('change', toggleProxyPref);
       (elementsCache.langSelect as HTMLSelectElement).addEventListener('change', (e) => setLanguage((e.target as HTMLSelectElement).value));
       (root.querySelectorAll('.tabs > .tab-btn')[0] as HTMLElement).addEventListener('click', () => switchTab('discovery'));
-      (root.querySelectorAll('.tabs > .tab-btn')[1] as HTMLElement).addEventListener('click', () => switchTab('channel'));
-      (root.querySelectorAll('.tabs > .tab-btn')[2] as HTMLElement).addEventListener('click', () => switchTab('direct'));
-      ($('btn-search-channel') as HTMLElement).addEventListener('click', () => searchStreamer());
+      (root.querySelectorAll('.tabs > .tab-btn')[1] as HTMLElement).addEventListener('click', () => switchTab('direct'));
       ($('btn-search-vod') as HTMLElement).addEventListener('click', () => searchVodById());
       ($('btn-top-fr') as HTMLElement).addEventListener('click', () => loadTopStreams('fr'));
       ($('btn-top-world') as HTMLElement).addEventListener('click', () => loadTopStreams('all'));
@@ -800,20 +813,6 @@ export default function FreetchPage() {
         fullscreen: { enabled: true, fallback: true, iosNative: true },
       });
 
-      player.on('ready', () => {
-        const plyrContainer = root.querySelector('.plyr');
-        if (plyrContainer && !$('chat-overlay')) {
-          const chatOverlay = document.createElement('div');
-          chatOverlay.id = 'chat-overlay';
-          plyrContainer.appendChild(chatOverlay);
-          const chatToggleBtn = document.createElement('button');
-          chatToggleBtn.id = 'chat-toggle-btn';
-          chatToggleBtn.innerHTML = '💬 Chat';
-          chatToggleBtn.onclick = () => { chatOverlay.classList.toggle('active'); };
-          plyrContainer.appendChild(chatToggleBtn);
-        }
-      });
-
       player.on('timeupdate', () => {
         const video = $('freetch-player') as HTMLVideoElement;
         if (currentVodId && video.currentTime > 0) {
@@ -830,7 +829,7 @@ export default function FreetchPage() {
 
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('id')) { ($('vodInput') as HTMLInputElement).value = urlParams.get('id')!; switchTab('direct'); searchVodById(); }
-      else if (urlParams.get('channel')) { ($('channelInput') as HTMLInputElement).value = urlParams.get('channel')!; switchTab('channel'); searchStreamer(true); }
+      else if (urlParams.get('channel')) { ($('channelInput') as HTMLInputElement).value = urlParams.get('channel')!; switchTab('discovery'); searchStreamer(true); }
       else { switchTab('discovery'); }
 
       if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -875,11 +874,22 @@ export default function FreetchPage() {
               <option value="es">ES</option>
             </select>
           </div>
-          <h1 data-lang="title">Twitch VOD Unblocker</h1>
+          <div className="banner-wrap">
+            <img src="/banièrefreetch.png" alt="Freetch" className="freetch-banner" />
+            <div className="banner-search">
+              <div>
+                <input type="text" id="channelInput" placeholder="🔍 Streamer + Mot (Ex: squeezie horreur)" data-placeholder="ph_streamer" autoComplete="off" />
+                <div id="autocomplete-box" className="autocomplete-suggestions"></div>
+              </div>
+            </div>
+          </div>
+          <div id="channel-history-container">
+            <div className="history-title" style={{ marginTop: 5, color: '#aaa', fontSize: '0.85rem' }} data-lang="lbl_channel_history">Streamers récents :</div>
+            <div id="channel-history-list"></div>
+          </div>
 
           <div className="tabs">
             <button className="tab-btn active" data-lang="tab_discovery">🌟 Découverte</button>
-            <button className="tab-btn" data-lang="tab_streamer">Streamer</button>
             <button className="tab-btn" data-lang="tab_id">Lien / ID</button>
           </div>
 
@@ -899,8 +909,11 @@ export default function FreetchPage() {
 
           <div id="status-msg" data-lang="status_ready">Prêt.</div>
 
-          <div id="video-container">
-            <video id="freetch-player" playsInline controls crossOrigin="anonymous"></video>
+          <div className="player-row">
+            <div id="video-container">
+              <video id="freetch-player" playsInline controls crossOrigin="anonymous"></video>
+            </div>
+            <div id="chat-side-panel"></div>
           </div>
 
           <div id="options-bar">
@@ -935,20 +948,6 @@ export default function FreetchPage() {
               </div>
             </div>
             <div id="discovery-top" className="stream-grid"></div>
-          </div>
-
-          <div id="tab-channel" className="tab-content">
-            <div className="search-bar">
-              <div style={{ position: 'relative', flex: 1, minWidth: 200, display: 'flex', width: '100%' }}>
-                <input type="text" id="channelInput" style={{ width: '100%' }} placeholder="Streamer + Mot (Ex: squeezie horreur)" data-placeholder="ph_streamer" autoComplete="off" />
-                <div id="autocomplete-box" className="autocomplete-suggestions"></div>
-              </div>
-              <button id="btn-search-channel" className="btn-primary" data-lang="btn_search">🔍 Chercher</button>
-            </div>
-            <div id="channel-history-container">
-              <div className="history-title" style={{ marginTop: 5, color: '#aaa', fontSize: '0.85rem' }} data-lang="lbl_channel_history">Streamers récents :</div>
-              <div id="channel-history-list"></div>
-            </div>
             <div id="live-area"></div>
             <div id="vod-list"></div>
           </div>
