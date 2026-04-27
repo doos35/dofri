@@ -11,9 +11,30 @@ declare global {
 const STYLES = `
 .freetch-root { --primary: #9146ff; --dark: #0e0e10; --card: #18181b; --text: #efeff1; --danger: #ff4f4d; --outplayer: #007aff; --vlc: #ff8800; --infuse: #fc3c44; }
 .freetch-root, .freetch-root * { box-sizing: border-box; }
-.freetch-root { font-family: 'Inter', sans-serif; background-color: var(--dark); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: calc(100vh - 4rem); padding: 20px; }
+.freetch-root { font-family: 'Inter', sans-serif; background-color: var(--dark); color: var(--text); min-height: calc(100vh - 4rem); padding: 20px; }
 .freetch-root button, .freetch-root input, .freetch-root select { font-family: 'Inter', sans-serif; }
-.freetch-root .container { width: 100%; max-width: 900px; background: var(--card); padding: 25px; border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; position: relative; padding-top: 50px; }
+.freetch-layout { display: flex; gap: 20px; max-width: 1500px; margin: 0 auto; align-items: flex-start; }
+.freetch-sidebar { width: 240px; flex-shrink: 0; background: var(--card); border-radius: 16px; padding: 15px; position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+.freetch-sidebar::-webkit-scrollbar { width: 6px; }
+.freetch-sidebar::-webkit-scrollbar-thumb { background: #3a3a40; border-radius: 3px; }
+.freetch-sidebar-title { font-size: 0.85rem; font-weight: 800; color: #efeff1; text-transform: uppercase; letter-spacing: 0.5px; padding: 5px 10px; margin-bottom: 8px; }
+.freetch-sidebar-empty { color: #777; padding: 10px; font-size: 0.8rem; text-align: center; line-height: 1.4; }
+.sidebar-channel { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+.sidebar-channel:hover { background: #2a2a30; }
+.sidebar-channel-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #111; }
+.sidebar-channel-info { flex: 1; min-width: 0; }
+.sidebar-channel-name { font-size: 0.85rem; font-weight: 700; color: #efeff1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-channel-game { font-size: 0.7rem; color: #adadb8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-channel-viewers { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #efeff1; font-weight: 600; flex-shrink: 0; }
+.sidebar-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e91916; }
+.freetch-root .freetch-sidebar-login { background: var(--primary); color: white; border: none; padding: 10px 6px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; width: 100%; margin-top: 8px; white-space: normal; line-height: 1.3; }
+.freetch-main { flex: 1; min-width: 0; }
+.freetch-main .container { width: 100%; max-width: none; background: var(--card); padding: 25px; border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; position: relative; padding-top: 50px; }
+@media (max-width: 900px) {
+  .freetch-layout { flex-direction: column; }
+  .freetch-sidebar { width: 100%; max-height: 280px; position: static; order: 2; }
+  .freetch-main { order: 1; width: 100%; }
+}
 .freetch-root #video-container { width: 100%; margin-bottom: 20px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 12px; overflow: hidden; position: relative; }
 .freetch-root .plyr { --plyr-color-main: #9146ff; --plyr-video-control-color: #efeff1; --plyr-video-control-background-hover: rgba(255, 255, 255, 0.15); --plyr-menu-background: #18181b; --plyr-menu-color: #efeff1; font-family: 'Inter', sans-serif; border-radius: 12px !important; }
 .freetch-root .plyr--video .plyr__control--overlaid { background: rgba(0, 0, 0, 0.6); border-radius: 12px; }
@@ -262,6 +283,7 @@ export default function FreetchPage() {
               <button class="btn-primary" data-action="login" style="background: #9146ff; font-size: 1.1rem; padding: 15px 30px;" data-lang="btn_login_twitch">${txt('btn_login_twitch')}</button>
             </div>`;
           topDiv.innerHTML = `<span style='color:#777; grid-column: 1 / -1; text-align: center;' data-lang="login_required">${txt('login_required')}</span>`;
+          renderFollowedSidebar([], false);
           return;
         }
 
@@ -283,7 +305,18 @@ export default function FreetchPage() {
           }
           const resFollowed = await fetch(`https://api.twitch.tv/helix/streams/followed?user_id=${userId}&first=20`, { headers: { 'Authorization': `Bearer ${token}`, 'Client-Id': HELIX_CLIENT_ID } });
           const dataFollowed = await resFollowed.json();
-          followedDiv.innerHTML = renderStreamGrid(dataFollowed.data);
+          const followedStreams: any[] = dataFollowed.data || [];
+          if (followedStreams.length > 0) {
+            try {
+              const idsParam = followedStreams.map((s: any) => 'id=' + s.user_id).join('&');
+              const usersRes = await fetch('https://api.twitch.tv/helix/users?' + idsParam, { headers: { 'Authorization': `Bearer ${token}`, 'Client-Id': HELIX_CLIENT_ID } });
+              const usersData = await usersRes.json();
+              const avatarMap: Record<string, string> = Object.fromEntries((usersData.data || []).map((u: any) => [u.id, u.profile_image_url]));
+              followedStreams.forEach((s: any) => { s.profile_image_url = avatarMap[s.user_id]; });
+            } catch (e) { /* avatars optional */ }
+          }
+          followedDiv.innerHTML = renderStreamGrid(followedStreams);
+          renderFollowedSidebar(followedStreams, true);
         } catch (e) {
           localStorage.removeItem('twitch_token');
           followedDiv.innerHTML = `<span class="status-error" style="grid-column: 1 / -1;" data-lang="session_expired">${txt('session_expired')}</span>`;
@@ -309,6 +342,32 @@ export default function FreetchPage() {
           const dataTop = await resTop.json();
           topDiv.innerHTML = renderStreamGrid(dataTop.data);
         } catch (e) { topDiv.innerHTML = `<span class="status-error" style="grid-column: 1 / -1;" data-lang="err_loading">${txt('err_loading')}</span>`; }
+      }
+
+      function renderFollowedSidebar(streams: any[], loggedIn: boolean) {
+        const list = $('sidebar-followed-list') as HTMLElement | null;
+        if (!list) return;
+        if (!loggedIn) {
+          list.innerHTML = `<div class="freetch-sidebar-empty">${txt('login_prompt')}</div><button class="freetch-sidebar-login" data-action="login">${txt('btn_login_twitch')}</button>`;
+          return;
+        }
+        if (!streams || streams.length === 0) {
+          list.innerHTML = `<div class="freetch-sidebar-empty">${txt('no_live')}</div>`;
+          return;
+        }
+        list.innerHTML = streams.map((s: any) => {
+          const viewers = s.viewer_count >= 1000 ? (s.viewer_count / 1000).toFixed(1) + 'k' : s.viewer_count;
+          const avatar = s.profile_image_url || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/cdd517fe-def4-11e9-948e-784f43822e80-profile_image-70x70.png';
+          return `
+            <div class="sidebar-channel" data-action="play-discovery" data-channel="${s.user_login}" title="${s.title || ''}">
+              <img src="${avatar}" class="sidebar-channel-avatar" loading="lazy">
+              <div class="sidebar-channel-info">
+                <div class="sidebar-channel-name">${s.user_name}</div>
+                <div class="sidebar-channel-game">${s.game_name || ''}</div>
+              </div>
+              <div class="sidebar-channel-viewers"><span class="sidebar-live-dot"></span>${viewers}</div>
+            </div>`;
+        }).join('');
       }
 
       function renderStreamGrid(streams: any[]) {
@@ -797,6 +856,14 @@ export default function FreetchPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
       <div className="freetch-root" ref={rootRef}>
+        <div className="freetch-layout">
+          <aside className="freetch-sidebar">
+            <div className="freetch-sidebar-title" data-lang="followed_channels">💜 Vos Chaînes Suivies</div>
+            <div id="sidebar-followed-list">
+              <div className="freetch-sidebar-empty" data-lang="login_prompt">Connectez-vous pour retrouver facilement vos chaînes préférées et synchroniser votre historique.</div>
+            </div>
+          </aside>
+          <main className="freetch-main">
         <div className="container">
           <div style={{ position: 'absolute', top: 15, right: 15, display: 'flex', gap: 10, alignItems: 'center', zIndex: 10 }}>
             <label style={{ fontSize: '0.75rem', color: '#888', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }} title="Désactiver pour économiser le serveur (pratique pour VLC)">
@@ -892,6 +959,8 @@ export default function FreetchPage() {
               <button id="btn-search-vod" className="btn-primary" data-lang="btn_unlock">Déverrouiller</button>
             </div>
           </div>
+        </div>
+          </main>
         </div>
       </div>
     </>
