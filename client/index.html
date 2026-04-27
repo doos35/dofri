@@ -16,6 +16,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Twitch OAuth popup handler: fires before React mounts so the popup
+      // closes immediately when Twitch redirects back with the access token.
+      if (window.opener && window.location.hash.includes('access_token=')) {
+        try { window.opener.postMessage(window.location.hash, window.location.origin); } catch (e) {}
+        window.close();
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
