@@ -551,7 +551,7 @@ export default function FreetchPage() {
       function changeQuality() {
         const rawUrl = currentLinks[elementsCache.qualitySelect.value]; if (!rawUrl) return;
         elementsCache.vlcInput.value = rawUrl;
-        const video = $('player') as HTMLVideoElement;
+        const video = $('freetch-player') as HTMLVideoElement;
         let timeToRestore = isNewVodLoad ? 0 : video.currentTime;
         if (isNewVodLoad && currentVodId) {
           const savedTime = localStorage.getItem('vod_progress_' + currentVodId);
@@ -583,7 +583,7 @@ export default function FreetchPage() {
       }
 
       function togglePiP() {
-        const v = $('player') as any;
+        const v = $('freetch-player') as any;
         if (v.webkitSupportsPresentationMode && typeof v.webkitSetPresentationMode === 'function') {
           v.webkitSetPresentationMode(v.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture');
         } else if ((document as any).pictureInPictureEnabled) {
@@ -756,7 +756,7 @@ export default function FreetchPage() {
       });
 
       player.on('timeupdate', () => {
-        const video = $('player') as HTMLVideoElement;
+        const video = $('freetch-player') as HTMLVideoElement;
         if (currentVodId && video.currentTime > 0) {
           if (Math.abs(video.currentTime - lastSaveTime) > 5) {
             localStorage.setItem('vod_progress_' + currentVodId, String(video.currentTime));
