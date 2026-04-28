@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { Search } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -35,15 +36,12 @@ const STYLES = `
   .freetch-sidebar { width: 100%; max-height: 280px; position: static; order: 2; }
   .freetch-main { order: 1; width: 100%; }
 }
-.freetch-root .player-row { display: flex; gap: 12px; margin-bottom: 20px; }
-.freetch-root .player-row > #video-container { flex: 1; min-width: 0; margin-bottom: 0 !important; }
 .freetch-root #video-container { width: 100%; margin-bottom: 20px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 12px; overflow: hidden; position: relative; }
-.freetch-root #chat-side-panel { width: 340px; flex-shrink: 0; background: #18181b; border-radius: 12px; overflow: hidden; display: none; border: 1px solid #333; min-height: 480px; }
+.freetch-root #chat-side-panel { width: 340px; flex-shrink: 0; background: var(--card); border-radius: 16px; overflow: hidden; display: none; border: 1px solid #333; box-shadow: 0 4px 30px rgba(0,0,0,0.5); position: sticky; top: 80px; align-self: flex-start; height: calc(100vh - 100px); }
 .freetch-root #chat-side-panel.active { display: block; }
-.freetch-root #chat-side-panel iframe { width: 100%; height: 100%; min-height: 480px; border: none; display: block; }
+.freetch-root #chat-side-panel iframe { width: 100%; height: 100%; border: none; display: block; }
 @media (max-width: 1100px) {
-  .freetch-root .player-row { flex-direction: column; }
-  .freetch-root #chat-side-panel { width: 100%; min-height: 400px; }
+  .freetch-root #chat-side-panel { width: 100%; height: 400px; position: static; }
 }
 .freetch-root .plyr { --plyr-color-main: #9146ff; --plyr-video-control-color: #efeff1; --plyr-video-control-background-hover: rgba(255, 255, 255, 0.15); --plyr-menu-background: #18181b; --plyr-menu-color: #efeff1; font-family: 'Inter', sans-serif; border-radius: 12px !important; }
 .freetch-root .plyr--video .plyr__control--overlaid { background: rgba(0, 0, 0, 0.6); border-radius: 12px; }
@@ -56,16 +54,10 @@ const STYLES = `
 .freetch-root h1 { font-weight: 800; margin-bottom: 20px; color: #bf94ff; font-size: 1.5rem; margin-top: 0; }
 .freetch-root .banner-wrap { position: relative; margin: -10px 0 20px; }
 .freetch-root .freetch-banner { display: block; width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 20px rgba(145, 70, 255, 0.25); }
-.freetch-root .banner-search { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(48%, 460px); display: flex; gap: 8px; background: rgba(14, 14, 16, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
-.freetch-root .banner-search > div { position: relative; flex: 1; display: flex; min-width: 0; }
-.freetch-root .banner-search input[type="text"] { background: rgba(38, 38, 44, 0.7); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 9px 12px; border-radius: 8px; flex: 1; min-width: 0; font-size: 0.9rem; }
-.freetch-root .banner-search input[type="text"]:focus { outline: none; border-color: var(--primary); background: rgba(38, 38, 44, 0.9); }
-.freetch-root .banner-search input[type="text"]::placeholder { color: rgba(255,255,255,0.55); }
-.freetch-root .banner-search button.btn-primary { padding: 9px 14px; font-size: 0.85rem; flex-shrink: 0; }
+.freetch-root .banner-search { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(48%, 460px); }
+.freetch-root .banner-search > div { position: relative; width: 100%; }
 @media (max-width: 700px) {
-  .freetch-root .banner-search { left: 50%; transform: translate(-50%, -50%); width: calc(100% - 20px); padding: 6px; }
-  .freetch-root .banner-search input[type="text"] { padding: 7px 10px; font-size: 0.8rem; }
-  .freetch-root .banner-search button.btn-primary { padding: 7px 10px; font-size: 0.8rem; }
+  .freetch-root .banner-search { left: 50%; transform: translate(-50%, -50%); width: calc(100% - 20px); }
 }
 .freetch-root .mobile-only { display: none; }
 .freetch-root #mobile-alert { display: none; background: rgba(145, 70, 255, 0.15); border: 1px solid var(--primary); color: #e0ccff; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
@@ -77,6 +69,9 @@ const STYLES = `
 .freetch-root .search-bar { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap;}
 .freetch-root input[type="text"] { background: #26262c; border: 2px solid #3a3a40; color: white; padding: 12px; border-radius: 10px; font-size: 1rem; flex: 1; min-width: 200px; transition: 0.2s; }
 .freetch-root input[type="text"]:focus { outline: none; border-color: var(--primary); }
+.freetch-root input#channelInput { background: #1f2937; border: 2px solid #4b5563; color: white; padding: 14px 16px 14px 48px; border-radius: 16px; font-size: 1rem; min-width: 0; width: 100%; transition: all 0.2s; }
+.freetch-root input#channelInput::placeholder { color: #6b7280; }
+.freetch-root input#channelInput:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
 .freetch-root button { border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 1rem; color: white; transition: 0.2s; white-space: nowrap; }
 .freetch-root .btn-primary { background: var(--primary); }
 .freetch-root .btn-secondary { background: #3a3a40; font-size: 0.9rem; width: 100%; margin-top: 10px; }
@@ -878,7 +873,15 @@ export default function FreetchPage() {
             <img src="/banièrefreetch.png" alt="Freetch" className="freetch-banner" />
             <div className="banner-search">
               <div>
-                <input type="text" id="channelInput" placeholder="🔍 Streamer + Mot (Ex: squeezie horreur)" data-placeholder="ph_streamer" autoComplete="off" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+                <input
+                  type="text"
+                  id="channelInput"
+                  placeholder="Streamer + Mot (Ex: squeezie horreur)"
+                  data-placeholder="ph_streamer"
+                  autoComplete="off"
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-800 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all duration-200 text-base"
+                />
                 <div id="autocomplete-box" className="autocomplete-suggestions"></div>
               </div>
             </div>
@@ -909,11 +912,8 @@ export default function FreetchPage() {
 
           <div id="status-msg" data-lang="status_ready">Prêt.</div>
 
-          <div className="player-row">
-            <div id="video-container">
-              <video id="freetch-player" playsInline controls crossOrigin="anonymous"></video>
-            </div>
-            <div id="chat-side-panel"></div>
+          <div id="video-container">
+            <video id="freetch-player" playsInline controls crossOrigin="anonymous"></video>
           </div>
 
           <div id="options-bar">
@@ -960,6 +960,7 @@ export default function FreetchPage() {
           </div>
         </div>
           </main>
+          <aside id="chat-side-panel"></aside>
         </div>
       </div>
     </>
