@@ -33,8 +33,8 @@ const STYLES = `
 .freetch-main .container { width: 100%; max-width: none; background: var(--card); padding: 25px; border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; position: relative; padding-top: 50px; }
 @media (max-width: 900px) {
   .freetch-layout { flex-direction: column; }
-  .freetch-sidebar { width: 100%; max-height: 280px; position: static; order: 2; }
-  .freetch-main { order: 1; width: 100%; }
+  .freetch-sidebar { display: none; }
+  .freetch-main { width: 100%; }
 }
 .freetch-root #video-container { width: 100%; margin-bottom: 20px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 12px; overflow: hidden; position: relative; }
 .freetch-root #chat-side-panel { width: 340px; flex-shrink: 0; background: var(--card); border-radius: 16px; overflow: hidden; display: none; border: 1px solid #333; box-shadow: 0 4px 30px rgba(0,0,0,0.5); position: sticky; top: 80px; align-self: flex-start; height: calc(100vh - 100px); }
@@ -57,7 +57,8 @@ const STYLES = `
 .freetch-root .banner-search { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(48%, 460px); }
 .freetch-root .banner-search > div { position: relative; width: 100%; }
 @media (max-width: 700px) {
-  .freetch-root .banner-search { left: 50%; transform: translate(-50%, -50%); width: calc(100% - 20px); }
+  .freetch-root .banner-wrap { margin: 0 0 14px; }
+  .freetch-root .banner-search { position: static; transform: none; left: auto; top: auto; width: 100%; margin-top: 10px; }
 }
 .freetch-root .mobile-only { display: none; }
 .freetch-root #mobile-alert { display: none; background: rgba(145, 70, 255, 0.15); border: 1px solid var(--primary); color: #e0ccff; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; }
@@ -130,11 +131,23 @@ const STYLES = `
 .freetch-root .suggestion-item:last-child { border-bottom: none; }
 .freetch-root .suggestion-item:hover { background: #3a3a40; padding-left: 15px; border-left: 3px solid var(--primary); }
 .freetch-root .suggestion-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #111; flex-shrink: 0; }
-@media (max-width: 600px) {
-  .freetch-root .container { padding: 15px; padding-top: 45px; width: 100%; }
+@media (max-width: 700px) {
+  .freetch-root { padding: 10px; }
+  .freetch-root .container { padding: 14px; padding-top: 50px; width: 100%; }
   .freetch-root .live-thumb-container { width: 100%; }
   .freetch-root .vlc-section div { flex-wrap: wrap; }
-  .freetch-root #chat-overlay { width: 70%; }
+  .freetch-root .stream-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .freetch-root #vod-list { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .freetch-root .tabs { gap: 4px; padding: 4px; }
+  .freetch-root .tab-btn { padding: 8px 6px; font-size: 0.85rem; }
+  .freetch-root input#channelInput { padding: 12px 14px 12px 42px; font-size: 0.95rem; border-radius: 12px; }
+  .freetch-root .history-vod-card { width: 200px; }
+  .freetch-root .live-card { padding: 12px; gap: 10px; }
+  .freetch-root .live-avatar { width: 42px; height: 42px; }
+  .freetch-root .live-thumb-container { width: 100%; }
+  .freetch-root #status-msg { font-size: 0.85rem; }
+  .freetch-root .history-title { font-size: 0.85rem; }
+  .freetch-root #vod-history-list { gap: 8px; }
 }
 @keyframes freetchFadeIn { from { opacity: 0; } to { opacity: 1; } }
 `;
