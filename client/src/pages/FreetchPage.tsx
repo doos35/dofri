@@ -270,19 +270,46 @@ export default function FreetchPage() {
       }
 
       function txt(key: string) { return translations[currentLang][key] || key; }
+
+      type ElOpts = {
+        class?: string;
+        text?: string;
+        title?: string;
+        src?: string;
+        attrs?: Record<string, string>;
+        style?: string;
+        children?: (HTMLElement | null | false | undefined)[];
+        onClick?: (e: Event) => void;
+      };
+      function el<K extends keyof HTMLElementTagNameMap>(tag: K, opts: ElOpts = {}): HTMLElementTagNameMap[K] {
+        const node = document.createElement(tag);
+        if (opts.class) node.className = opts.class;
+        if (opts.text != null) node.textContent = opts.text;
+        if (opts.title != null) node.setAttribute('title', opts.title);
+        if (opts.src != null) node.setAttribute('src', opts.src);
+        if (opts.style != null) node.setAttribute('style', opts.style);
+        if (opts.attrs) for (const [k, v] of Object.entries(opts.attrs)) node.setAttribute(k, v);
+        if (opts.onClick) node.addEventListener('click', opts.onClick);
+        if (opts.children) for (const c of opts.children) if (c) node.appendChild(c);
+        return node;
+      }
+      function clearAndAppend(parent: HTMLElement, ...nodes: (HTMLElement | null | undefined | false)[]) {
+        while (parent.firstChild) parent.removeChild(parent.firstChild);
+        for (const n of nodes) if (n) parent.appendChild(n);
+      }
       function setStreamTitle(title: string | null, streamer?: string | null, game?: string | null, isLive?: boolean) {
         const bar = $('stream-title-bar') as HTMLElement | null;
         const titleEl = $('stream-title') as HTMLElement | null;
         const metaEl = $('stream-meta') as HTMLElement | null;
         if (!bar || !titleEl || !metaEl) return;
-        if (!title) { bar.classList.remove('active'); titleEl.textContent = ''; metaEl.innerHTML = ''; return; }
+        if (!title) { bar.classList.remove('active'); titleEl.textContent = ''; clearAndAppend(metaEl); return; }
         bar.classList.add('active');
         titleEl.textContent = title;
-        const parts: string[] = [];
-        if (isLive) parts.push('<span class="live-tag">EN DIRECT</span>');
-        if (streamer) parts.push(`<span class="streamer-name">${streamer}</span>`);
-        if (game) parts.push(`<span class="game-name">${game}</span>`);
-        metaEl.innerHTML = parts.join('');
+        const parts: HTMLElement[] = [];
+        if (isLive) parts.push(el('span', { class: 'live-tag', text: 'EN DIRECT' }));
+        if (streamer) parts.push(el('span', { class: 'streamer-name', text: streamer }));
+        if (game) parts.push(el('span', { class: 'game-name', text: game }));
+        clearAndAppend(metaEl, ...parts);
       }
       function setStatus(msgKey: string, type?: string) {
         elementsCache.status.textContent = translations[currentLang][msgKey] || msgKey;
@@ -405,7 +432,7 @@ export default function FreetchPage() {
               followedStreams.forEach((s: any) => { s.profile_image_url = avatarMap[s.user_id]; });
             } catch (e) { /* avatars optional */ }
           }
-          followedDiv.innerHTML = renderStreamGrid(followedStreams);
+          renderStreamGridInto(followedDiv, followedStreams);
           renderFollowedSidebar(followedStreams, true);
         } catch (e) {
           localStorage.removeItem('twitch_token');
@@ -430,53 +457,89 @@ export default function FreetchPage() {
         try {
           const resTop = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Client-Id': HELIX_CLIENT_ID } });
           const dataTop = await resTop.json();
-          topDiv.innerHTML = renderStreamGrid(dataTop.data);
-        } catch (e) { topDiv.innerHTML = `<span class="status-error" style="grid-column: 1 / -1;" data-lang="err_loading">${txt('err_loading')}</span>`; }
+          renderStreamGridInto(topDiv, dataTop.data);
+        } catch (e) {
+          clearAndAppend(topDiv, el('span', { class: 'status-error', text: txt('err_loading'), attrs: { 'data-lang': 'err_loading' }, style: 'grid-column: 1 / -1;' }));
+        }
       }
 
       function renderFollowedSidebar(streams: any[], loggedIn: boolean) {
         const list = $('sidebar-followed-list') as HTMLElement | null;
         if (!list) return;
         if (!loggedIn) {
-          list.innerHTML = `<div class="freetch-sidebar-empty">${txt('login_prompt')}</div><button class="freetch-sidebar-login" data-action="login">${txt('btn_login_twitch')}</button>`;
+          clearAndAppend(list,
+            el('div', { class: 'freetch-sidebar-empty', text: txt('login_prompt') }),
+            el('button', { class: 'freetch-sidebar-login', text: txt('btn_login_twitch'), attrs: { 'data-action': 'login' } }),
+          );
           return;
         }
         if (!streams || streams.length === 0) {
-          list.innerHTML = `<div class="freetch-sidebar-empty">${txt('no_live')}</div>`;
+          clearAndAppend(list, el('div', { class: 'freetch-sidebar-empty', text: txt('no_live') }));
           return;
         }
-        list.innerHTML = streams.map((s: any) => {
-          const viewers = s.viewer_count >= 1000 ? (s.viewer_count / 1000).toFixed(1) + 'k' : s.viewer_count;
+        const cards = streams.map((s: any) => {
+          const viewers = s.viewer_count >= 1000 ? (s.viewer_count / 1000).toFixed(1) + 'k' : String(s.viewer_count);
           const avatar = s.profile_image_url || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/cdd517fe-def4-11e9-948e-784f43822e80-profile_image-70x70.png';
-          return `
-            <div class="sidebar-channel" data-action="play-discovery" data-channel="${s.user_login}" title="${s.title || ''}">
-              <img src="${avatar}" class="sidebar-channel-avatar" loading="lazy">
-              <div class="sidebar-channel-info">
-                <div class="sidebar-channel-name">${s.user_name}</div>
-                <div class="sidebar-channel-game">${s.game_name || ''}</div>
-              </div>
-              <div class="sidebar-channel-viewers"><span class="sidebar-live-dot"></span>${viewers}</div>
-            </div>`;
-        }).join('');
+          return el('div', {
+            class: 'sidebar-channel',
+            title: s.title || '',
+            attrs: { 'data-action': 'play-discovery', 'data-channel': String(s.user_login) },
+            children: [
+              el('img', { class: 'sidebar-channel-avatar', src: avatar, attrs: { loading: 'lazy' } }),
+              el('div', {
+                class: 'sidebar-channel-info',
+                children: [
+                  el('div', { class: 'sidebar-channel-name', text: String(s.user_name) }),
+                  el('div', { class: 'sidebar-channel-game', text: String(s.game_name || '') }),
+                ],
+              }),
+              el('div', {
+                class: 'sidebar-channel-viewers',
+                children: [
+                  el('span', { class: 'sidebar-live-dot' }),
+                  el('span', { text: ' ' + viewers }),
+                ],
+              }),
+            ],
+          });
+        });
+        clearAndAppend(list, ...cards);
       }
 
-      function renderStreamGrid(streams: any[]) {
-        if (!streams || streams.length === 0) return `<span style='color:#aaa; grid-column: 1 / -1;' data-lang="no_live">${txt('no_live')}</span>`;
-        return streams.map((s: any) => {
+      function renderStreamGridInto(parent: HTMLElement, streams: any[]) {
+        if (!streams || streams.length === 0) {
+          clearAndAppend(parent, el('span', {
+            text: txt('no_live'),
+            attrs: { 'data-lang': 'no_live' },
+            style: "color:#aaa; grid-column: 1 / -1;",
+          }));
+          return;
+        }
+        const cards = streams.map((s: any) => {
           const thumb = s.thumbnail_url.replace('{width}', '320').replace('{height}', '180');
-          const viewers = s.viewer_count >= 1000 ? (s.viewer_count / 1000).toFixed(1) + 'k' : s.viewer_count;
-          return `
-            <div class="stream-card" data-action="play-discovery" data-channel="${s.user_login}">
-              <div class="stream-thumb-wrapper">
-                <img src="${thumb}" class="stream-thumb">
-                <span class="stream-badge">🔴 ${viewers}</span>
-              </div>
-              <div class="stream-info">
-                <div class="stream-title" title="${s.title}">${s.title}</div>
-                <div class="stream-name">${s.user_name} • ${s.game_name}</div>
-              </div>
-            </div>`;
-        }).join('');
+          const viewers = s.viewer_count >= 1000 ? (s.viewer_count / 1000).toFixed(1) + 'k' : String(s.viewer_count);
+          return el('div', {
+            class: 'stream-card',
+            attrs: { 'data-action': 'play-discovery', 'data-channel': String(s.user_login) },
+            children: [
+              el('div', {
+                class: 'stream-thumb-wrapper',
+                children: [
+                  el('img', { class: 'stream-thumb', src: thumb }),
+                  el('span', { class: 'stream-badge', text: '🔴 ' + viewers }),
+                ],
+              }),
+              el('div', {
+                class: 'stream-info',
+                children: [
+                  el('div', { class: 'stream-title', title: String(s.title || ''), text: String(s.title || '') }),
+                  el('div', { class: 'stream-name', text: String(s.user_name) + ' • ' + String(s.game_name || '') }),
+                ],
+              }),
+            ],
+          });
+        });
+        clearAndAppend(parent, ...cards);
       }
 
       function playFromDiscovery(channelName: string) {
@@ -514,35 +577,58 @@ export default function FreetchPage() {
 
         if (vods.length > 0) {
           elements.vodHistoryContainer.style.display = 'block';
-          elements.vodHistoryList.innerHTML = '';
-          vods.forEach((item) => {
-            const div = document.createElement('div'); div.className = 'history-vod-card';
+          const vodCards = vods.map((item) => {
             const thumb = item.thumb || 'https://vod-secure.twitch.tv/_404/404_processing_320x180.png';
             const streamer = item.streamer || 'VOD';
-            div.innerHTML = `<img src="${thumb}" class="history-vod-thumb"><div class="history-vod-info"><div class="history-vod-title">${item.display}</div><div class="history-vod-streamer">${streamer}</div></div><div class="delete-item-btn" data-action="del-history" data-term="${item.term}">✖</div>`;
-            div.onclick = () => { fetchAndPlayVod(item.term, item.display, item.thumb, item.streamer); };
-            elements.vodHistoryList.appendChild(div);
+            return el('div', {
+              class: 'history-vod-card',
+              onClick: () => { fetchAndPlayVod(item.term, item.display, item.thumb, item.streamer); },
+              children: [
+                el('img', { class: 'history-vod-thumb', src: thumb }),
+                el('div', {
+                  class: 'history-vod-info',
+                  children: [
+                    el('div', { class: 'history-vod-title', text: String(item.display || '') }),
+                    el('div', { class: 'history-vod-streamer', text: String(streamer) }),
+                  ],
+                }),
+                el('div', {
+                  class: 'delete-item-btn',
+                  text: '✖',
+                  attrs: { 'data-action': 'del-history', 'data-term': String(item.term) },
+                }),
+              ],
+            });
           });
+          clearAndAppend(elements.vodHistoryList, ...vodCards);
         } else { elements.vodHistoryContainer.style.display = 'none'; }
 
         if (channels.length > 0) {
           elements.chanHistoryContainer.style.display = 'block';
-          elements.chanHistoryList.innerHTML = '';
-          channels.forEach((item) => {
-            const tag = document.createElement('div'); tag.className = 'history-tag';
-            tag.innerHTML = `👤 ${item.display} <span class="delete-item-btn" data-action="del-history" data-term="${item.term}" style="margin-left: 5px; width: 18px; height: 18px; background: transparent;">✖</span>`;
-            tag.onclick = () => { ($('channelInput') as HTMLInputElement).value = item.term; switchTab('channel'); searchStreamer(); };
-            elements.chanHistoryList.appendChild(tag);
+          const tags: HTMLElement[] = channels.map((item) => el('div', {
+            class: 'history-tag',
+            onClick: () => { ($('channelInput') as HTMLInputElement).value = item.term; switchTab('discovery'); searchStreamer(); },
+            children: [
+              el('span', { text: '👤 ' + String(item.display || '') }),
+              el('span', {
+                class: 'delete-item-btn',
+                text: '✖',
+                attrs: { 'data-action': 'del-history', 'data-term': String(item.term) },
+                style: 'margin-left: 5px; width: 18px; height: 18px; background: transparent;',
+              }),
+            ],
+          }));
+          const clearBtn = el('div', {
+            class: 'history-clear',
+            text: '🗑️ ' + txt('btn_clear') + ' Tout',
+            onClick: () => {
+              searchHistory = searchHistory.filter((h) => h.type === 'vod');
+              localStorage.setItem('twitch_vod_history', JSON.stringify(searchHistory));
+              renderHistory();
+              debouncedCloudSave();
+            },
           });
-          const clearBtn = document.createElement('div'); clearBtn.className = 'history-clear';
-          clearBtn.innerHTML = `🗑️ ${txt('btn_clear')} Tout`;
-          clearBtn.onclick = () => {
-            searchHistory = searchHistory.filter((h) => h.type === 'vod');
-            localStorage.setItem('twitch_vod_history', JSON.stringify(searchHistory));
-            renderHistory();
-            debouncedCloudSave();
-          };
-          elements.chanHistoryList.appendChild(clearBtn);
+          clearAndAppend(elements.chanHistoryList, ...tags, clearBtn);
         } else { elements.chanHistoryContainer.style.display = 'none'; }
       }
 
@@ -590,38 +676,83 @@ export default function FreetchPage() {
 
           if (!dataLive.error) {
             const thumbUrl = dataLive.thumbnail ? dataLive.thumbnail.replace('{width}', '320').replace('{height}', '180') : '';
-            elementsCache.liveArea.innerHTML = `<div class="live-card online"><img src="${avatarUrl}" class="live-avatar"><div class="live-info"><span class="live-badge">${txt('live_on')}</span><div class="live-title">${dataLive.title}</div><div class="live-game">${dataLive.game}</div><button class="btn-primary" data-action="watch-live" style="margin-top:10px; width:100%">${txt('btn_watch_live')}</button></div>${thumbUrl ? `<div class="live-thumb-container"><img src="${thumbUrl}" class="live-thumb"></div>` : ''}</div>`;
+            const card = el('div', {
+              class: 'live-card online',
+              children: [
+                el('img', { class: 'live-avatar', src: avatarUrl }),
+                el('div', {
+                  class: 'live-info',
+                  children: [
+                    el('span', { class: 'live-badge', text: txt('live_on') }),
+                    el('div', { class: 'live-title', text: String(dataLive.title || '') }),
+                    el('div', { class: 'live-game', text: String(dataLive.game || '') }),
+                    el('button', { class: 'btn-primary', text: txt('btn_watch_live'), attrs: { 'data-action': 'watch-live' }, style: 'margin-top:10px; width:100%' }),
+                  ],
+                }),
+                thumbUrl ? el('div', { class: 'live-thumb-container', children: [el('img', { class: 'live-thumb', src: thumbUrl })] }) : null,
+              ],
+            });
+            clearAndAppend(elementsCache.liveArea, card);
             if (autoPlay) watchLive();
           } else {
-            let offlineText = txt('offline_msg') || 'Pas de stream en cours.';
+            let offlineNode: HTMLElement = el('span', { text: txt('offline_msg') || 'Pas de stream en cours.' });
             if (!dataVods.error && dataVods.videos && dataVods.videos.length > 0) {
               const timeSinceStr = getTimeSince(dataVods.videos[0].publishedAt, dataVods.videos[0].lengthSeconds);
-              if (timeSinceStr) offlineText = `<span style="color:#e91916; font-weight:700;">${txt('offline_since')} ${timeSinceStr}</span>`;
+              if (timeSinceStr) {
+                offlineNode = el('span', { style: 'color:#e91916; font-weight:700;', text: txt('offline_since') + ' ' + timeSinceStr });
+              }
             }
-            elementsCache.liveArea.innerHTML = `<div class="live-card"><img src="${avatarUrl}" class="live-avatar" style="border-color:#555"><div class="live-info"><span class="live-badge" style="background:#555">${txt('offline')}</span><div class="live-title" style="color:#aaa; margin-top:5px;">${offlineText}</div></div></div>`;
+            const card = el('div', {
+              class: 'live-card',
+              children: [
+                el('img', { class: 'live-avatar', src: avatarUrl, style: 'border-color:#555' }),
+                el('div', {
+                  class: 'live-info',
+                  children: [
+                    el('span', { class: 'live-badge', text: txt('offline'), style: 'background:#555' }),
+                    el('div', { class: 'live-title', style: 'color:#aaa; margin-top:5px;', children: [offlineNode] }),
+                  ],
+                }),
+              ],
+            });
+            clearAndAppend(elementsCache.liveArea, card);
           }
 
           if (dataVods.error) { setStatus('no_vod', 'error'); } else {
             const vodEmpty = $('vod-empty') as HTMLElement | null;
             if (vodEmpty) vodEmpty.style.display = 'none';
-            elementsCache.vodList.innerHTML = '';
             elementsCache.vodList.style.display = 'grid';
-            let displayedCount = 0;
+            const cards: HTMLElement[] = [];
             dataVods.videos.forEach((vod: any) => {
-              const titleLower = vod.title.toLowerCase();
+              const titleLower = String(vod.title || '').toLowerCase();
               const date = new Date(vod.publishedAt).toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US');
               if (searchKeyword && !titleLower.includes(searchKeyword) && !date.includes(searchKeyword)) return;
-              displayedCount++;
-              const card = document.createElement('div'); card.className = 'vod-card';
-              card.onclick = () => fetchAndPlayVod(vod.id, vod.title, vod.previewThumbnailURL, channelName);
               const duration = Math.floor(vod.lengthSeconds / 60) + ' min';
-              card.innerHTML = `<div class="stream-thumb-wrapper"><img src="${vod.previewThumbnailURL}" class="vod-thumb"></div><div class="vod-info"><div class="vod-title">${vod.title}</div><div class="vod-meta">${date} • ${duration}</div></div>`;
-              elementsCache.vodList.appendChild(card);
+              const card = el('div', {
+                class: 'vod-card',
+                onClick: () => fetchAndPlayVod(vod.id, vod.title, vod.previewThumbnailURL, channelName),
+                children: [
+                  el('div', { class: 'stream-thumb-wrapper', children: [el('img', { class: 'vod-thumb', src: vod.previewThumbnailURL })] }),
+                  el('div', {
+                    class: 'vod-info',
+                    children: [
+                      el('div', { class: 'vod-title', text: String(vod.title || '') }),
+                      el('div', { class: 'vod-meta', text: date + ' • ' + duration }),
+                    ],
+                  }),
+                ],
+              });
+              cards.push(card);
             });
+            const displayedCount = cards.length;
             if (displayedCount === 0 && searchKeyword) {
               setStatus(`Aucun résultat pour "${searchKeyword}"`, 'error');
-              elementsCache.vodList.innerHTML = `<span style='color:#aaa; grid-column: 1 / -1; text-align: center; padding: 20px;'>Aucune VOD trouvée avec le terme <b>"${searchKeyword}"</b> dans les 100 dernières vidéos.</span>`;
+              clearAndAppend(elementsCache.vodList, el('span', {
+                style: 'color:#aaa; grid-column: 1 / -1; text-align: center; padding: 20px;',
+                text: `Aucune VOD trouvée avec le terme "${searchKeyword}" dans les 100 dernières vidéos.`,
+              }));
             } else {
+              clearAndAppend(elementsCache.vodList, ...cards);
               setStatus(searchKeyword ? `${displayedCount} résultat(s) pour "${searchKeyword}"` : 'vods_found', 'success');
             }
           }
@@ -731,6 +862,7 @@ export default function FreetchPage() {
         if (chatPanel) { chatPanel.innerHTML = ''; chatPanel.classList.remove('active'); }
       }
 
+      let autocompleteDocClick: ((e: Event) => void) | null = null;
       function setupAutocomplete() {
         const input = $('channelInput') as HTMLInputElement;
         const box = $('autocomplete-box') as HTMLElement;
@@ -760,24 +892,34 @@ export default function FreetchPage() {
             const unique: any[] = []; const seen = new Set();
             suggestions.forEach((s) => { if (!seen.has(s.login)) { seen.add(s.login); unique.push(s); } });
             if (unique.length > 0) {
-              box.innerHTML = unique.slice(0, 6).map((s) => `
-                <div class="suggestion-item" data-action="suggest" data-login="${s.login}">
-                  ${s.avatar ? `<img src="${s.avatar}" class="suggestion-avatar">` : `<div class="suggestion-avatar" style="display:flex;align-items:center;justify-content:center;font-size:12px;">👤</div>`}
-                  <div>
-                    <div style="font-weight: 700; font-size: 0.9rem;">${s.name}</div>
-                    ${s.login !== s.name.toLowerCase() ? `<div style="font-size: 0.7rem; color: #aaa;">${s.login}</div>` : ''}
-                  </div>
-                </div>`).join('');
+              const items = unique.slice(0, 6).map((s) => el('div', {
+                class: 'suggestion-item',
+                attrs: { 'data-action': 'suggest', 'data-login': String(s.login) },
+                children: [
+                  s.avatar
+                    ? el('img', { class: 'suggestion-avatar', src: String(s.avatar) })
+                    : el('div', { class: 'suggestion-avatar', text: '👤', style: 'display:flex;align-items:center;justify-content:center;font-size:12px;' }),
+                  el('div', {
+                    children: [
+                      el('div', { style: 'font-weight: 700; font-size: 0.9rem;', text: String(s.name || '') }),
+                      String(s.login).toLowerCase() !== String(s.name || '').toLowerCase()
+                        ? el('div', { style: 'font-size: 0.7rem; color: #aaa;', text: String(s.login) })
+                        : null,
+                    ],
+                  }),
+                ],
+              }));
+              clearAndAppend(box, ...items);
               box.style.display = 'block';
             } else {
               box.style.display = 'none';
             }
           }, 300);
         });
-        const docClick = (e: Event) => {
+        autocompleteDocClick = (e: Event) => {
           if (!input.contains(e.target as Node) && !box.contains(e.target as Node)) box.style.display = 'none';
         };
-        document.addEventListener('click', docClick);
+        document.addEventListener('click', autocompleteDocClick);
       }
 
       function selectSuggestion(login: string) {
@@ -877,7 +1019,10 @@ export default function FreetchPage() {
       cleanup = () => {
         window.removeEventListener('message', onMessage);
         document.removeEventListener('click', onDocClickQuality);
+        if (autocompleteDocClick) document.removeEventListener('click', autocompleteDocClick);
         root.removeEventListener('click', onRootClick);
+        clearTimeout(searchTimeout);
+        clearTimeout(syncTimeout);
         try { if (hls) hls.destroy(); } catch (e) { /* */ }
         try { if (player) player.destroy(); } catch (e) { /* */ }
       };

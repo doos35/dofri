@@ -64,15 +64,17 @@ async function runInPool<T, R>(
   fn: (item: T) => Promise<R>
 ): Promise<R[]> {
   const results: R[] = [];
-  const executing: Promise<void>[] = [];
+  const executing = new Set<Promise<void>>();
 
   for (const item of items) {
-    const p = fn(item).then(result => { results.push(result); });
-    executing.push(p);
+    const p: Promise<void> = fn(item).then(result => {
+      results.push(result);
+      executing.delete(p);
+    });
+    executing.add(p);
 
-    if (executing.length >= concurrency) {
+    if (executing.size >= concurrency) {
       await Promise.race(executing);
-      executing.splice(0, executing.findIndex(e => e === Promise.resolve(e)) || 1);
     }
   }
 
