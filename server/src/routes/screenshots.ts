@@ -23,14 +23,50 @@ function isAllowedUrl(raw: string): boolean {
     const parsed = new URL(raw);
     if (!['http:', 'https:'].includes(parsed.protocol)) return false;
     const host = parsed.hostname.toLowerCase();
-    if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]') return false;
-    if (host === '0.0.0.0' || host.endsWith('.local')) return false;
+    // IPv4 loopback / link-local / metadata / private ranges
+    if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') return false;
+    if (host.endsWith('.local') || host.endsWith('.internal')) return false;
     if (host === '169.254.169.254') return false;
+    if (/^127\./.test(host)) return false;
     if (/^(10|172\.(1[6-9]|2\d|3[01])|192\.168)\./.test(host)) return false;
+    if (/^169\.254\./.test(host)) return false;
+    // IPv6 loopback / link-local / unique-local / IPv4-mapped
+    if (host === '[::1]' || host === '::1') return false;
+    if (host.startsWith('[fe80:') || host.startsWith('fe80:')) return false;
+    if (host.startsWith('[fc') || host.startsWith('[fd') || host.startsWith('fc') || host.startsWith('fd')) return false;
+    if (host.startsWith('[::ffff:') || host.startsWith('::ffff:')) return false;
     return true;
   } catch {
     return false;
   }
+}
+
+/**
+ * Fetch en suivant manuellement les redirects et revalidant chaque URL contre isAllowedUrl,
+ * pour bloquer les redirects vers des IPs privées (SSRF par redirect).
+ */
+async function safeAxiosGet(url: string, opts: { responseType?: 'json' | 'arraybuffer'; timeout: number; maxContentLength?: number; headers?: Record<string, string> }) {
+  const MAX_REDIRECTS = 5;
+  let currentUrl = url;
+  for (let i = 0; i <= MAX_REDIRECTS; i++) {
+    if (!isAllowedUrl(currentUrl)) throw new Error(`URL refusée (SSRF protection) : ${currentUrl}`);
+    const res = await axios.get(currentUrl, {
+      timeout: opts.timeout,
+      responseType: opts.responseType,
+      maxContentLength: opts.maxContentLength,
+      maxRedirects: 0,
+      validateStatus: (s) => s < 400 || (s >= 300 && s < 400),
+      headers: opts.headers,
+    });
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.location;
+      if (!location) throw new Error('Redirect sans header Location');
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+    return res;
+  }
+  throw new Error('Trop de redirects');
 }
 
 /** Génère un screenshot via Microlink et le stocke en cache. Retourne true si succès. */
@@ -44,7 +80,7 @@ export async function generateScreenshot(url: string): Promise<boolean> {
 
     // Étape 1 : appeler l'API Microlink en JSON pour obtenir l'URL du screenshot
     const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false`;
-    const metaResponse = await axios.get(microlinkUrl, {
+    const metaResponse = await safeAxiosGet(microlinkUrl, {
       timeout: 20000,
       responseType: 'json',
     });
@@ -52,8 +88,8 @@ export async function generateScreenshot(url: string): Promise<boolean> {
     const screenshotImageUrl = metaResponse.data?.data?.screenshot?.url;
     if (!screenshotImageUrl) return false;
 
-    // Étape 2 : télécharger l'image
-    const imgResponse = await axios.get(screenshotImageUrl, {
+    // Étape 2 : télécharger l'image (revalidation post-redirect contre les IPs privées)
+    const imgResponse = await safeAxiosGet(screenshotImageUrl, {
       responseType: 'arraybuffer',
       timeout: 15000,
       maxContentLength: MAX_SCREENSHOT_SIZE,

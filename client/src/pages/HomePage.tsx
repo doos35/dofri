@@ -50,18 +50,28 @@ export default function HomePage() {
   const handleEdit = isAuthenticated ? (link: LinkType) => setEditLink(link) : undefined;
 
   const handleCreate = async (data: CreateLinkDTO | UpdateLinkDTO) => {
-    await api.createLink(data as CreateLinkDTO);
-    setShowAddForm(false);
-    await refreshLinks();
-    addToast('Lien ajouté avec succès');
+    try {
+      await api.createLink(data as CreateLinkDTO);
+      setShowAddForm(false);
+      await refreshLinks();
+      addToast('Lien ajouté avec succès');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+      addToast(`Échec de l'ajout : ${msg}`, 'error');
+    }
   };
 
   const handleUpdate = async (data: UpdateLinkDTO) => {
     if (!editLink) return;
-    await api.updateLink(editLink.id, data);
-    setEditLink(null);
-    await refreshLinks();
-    addToast('Lien modifié avec succès');
+    try {
+      await api.updateLink(editLink.id, data);
+      setEditLink(null);
+      await refreshLinks();
+      addToast('Lien modifié avec succès');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+      addToast(`Échec de la modification : ${msg}`, 'error');
+    }
   };
 
   const scrollToCategory = useCallback((cat: string) => {

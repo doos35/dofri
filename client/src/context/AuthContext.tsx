@@ -54,6 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    const currentToken = localStorage.getItem('lp_token');
+    if (currentToken) {
+      // Best-effort revocation côté serveur ; on n'attend pas et on ignore les erreurs
+      // (réseau coupé / token déjà invalide) — le state local est nettoyé dans tous les cas.
+      axios.post(`${BASE_URL}/auth/logout`, null, {
+        headers: { Authorization: `Bearer ${currentToken}` },
+      }).catch(() => {});
+    }
     setToken(null);
     setUsername(null);
     localStorage.removeItem('lp_token');
