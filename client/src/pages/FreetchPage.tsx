@@ -36,7 +36,25 @@ const STYLES = `
   .freetch-sidebar { display: none; }
   .freetch-main { width: 100%; }
 }
-.freetch-root #video-container { width: 100%; margin-bottom: 20px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 12px; overflow: hidden; position: relative; }
+.freetch-root #video-container { width: 100%; margin-bottom: 0; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid #333; border-radius: 12px; overflow: visible; position: relative; }
+.freetch-root #video-container .plyr { border-radius: 12px; overflow: hidden; }
+.freetch-root #quality-control { position: absolute; top: 12px; right: 12px; z-index: 30; }
+.freetch-root #quality-btn { background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.15s; }
+.freetch-root #quality-btn:hover { background: rgba(145, 70, 255, 0.7); border-color: var(--primary); }
+.freetch-root #quality-menu { position: absolute; top: 100%; right: 0; margin-top: 6px; background: rgba(14,14,16,0.96); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; min-width: 150px; padding: 4px; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+.freetch-root #quality-menu.active { display: block; }
+.freetch-root .quality-item { padding: 8px 12px; cursor: pointer; color: white; font-size: 0.85rem; font-weight: 600; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; transition: 0.15s; }
+.freetch-root .quality-item:hover { background: rgba(145, 70, 255, 0.3); }
+.freetch-root .quality-item.active { background: var(--primary); color: white; }
+.freetch-root .quality-item.active::after { content: '✓'; margin-left: 8px; }
+.freetch-root #stream-title-bar { display: none; padding: 14px 4px 18px; text-align: left; border-bottom: 1px solid #2a2a30; margin-bottom: 18px; }
+.freetch-root #stream-title-bar.active { display: block; }
+.freetch-root #stream-title { font-size: 1.15rem; font-weight: 700; color: white; margin: 0 0 6px; line-height: 1.35; }
+.freetch-root .stream-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.85rem; color: #adadb8; }
+.freetch-root .stream-meta .streamer-name { color: #bf94ff; font-weight: 700; }
+.freetch-root .stream-meta .game-name { color: #adadb8; }
+.freetch-root .stream-meta .live-tag { display: inline-flex; align-items: center; gap: 5px; background: #e91916; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+.freetch-root .stream-meta .live-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: white; }
 .freetch-root #chat-side-panel { width: 340px; flex-shrink: 0; background: var(--card); border-radius: 16px; overflow: hidden; display: none; border: 1px solid #333; box-shadow: 0 4px 30px rgba(0,0,0,0.5); position: sticky; top: 80px; align-self: flex-start; height: calc(100vh - 100px); }
 .freetch-root #chat-side-panel.active { display: block; }
 .freetch-root #chat-side-panel iframe { width: 100%; height: 100%; border: none; display: block; }
@@ -189,9 +207,9 @@ export default function FreetchPage() {
       const HELIX_CLIENT_ID = 'lntpeun4pkahw9s90y268acuc141a8';
 
       const translations: Record<string, Record<string, string>> = {
-        fr: { title: 'Regarder Twitch sans Sub', tab_discovery: '🌟 Découverte', tab_id: 'Lien / ID', tab_streamer: 'Streamer', mobile_title: '📱 Mode Mobile', mobile_desc: 'Astuce : utilisez Outplayer, VLC ou Infuse.', ph_id: 'ID ou Lien de la VOD', btn_unlock: 'Déverrouiller', ph_streamer: 'Streamer + Mot (Ex: squeezie horreur)', btn_search: '🔍 Chercher', status_ready: 'Prêt.', lbl_quality: 'Qualité :', btn_pip: '📺 Activer PiP', btn_dl: '📥 Fichier M3U8', lbl_link: 'Lien externe :', btn_copy: 'Copier', err_missing: 'Nom manquant.', loading: 'Chargement...', live_on: 'EN DIRECT', btn_watch_live: '▶️ Regarder le Live', no_vod: 'Aucune VOD trouvée.', vods_found: 'VODs trouvées.', err_network: 'Erreur réseau.', err_live: 'Erreur Live.', loading_vod: 'Lancement VOD...', vod_ready: 'VOD en lecture !', err_conn: 'Erreur connexion.', copied: 'Lien copié !', offline: 'HORS LIGNE', offline_since: 'Hors ligne depuis : ', day: 'j', hour: 'h', min: 'min', lbl_vod_history: 'VODs récemment regardées :', lbl_channel_history: 'Streamers récents :', btn_clear: 'Effacer', not_found: '❌ Streamer introuvable.', offline_msg: 'Pas de stream en cours.', followed_channels: '💜 Vos Chaînes Suivies', top_streams: '🔥 Top Streams', btn_refresh: '🔄 Actualiser', btn_logout: 'Déconnexion', login_prompt: 'Connectez-vous pour retrouver facilement vos chaînes préférées et synchroniser votre historique.', btn_login_twitch: '🟣 Se connecter avec Twitch', login_required: 'Veuillez vous connecter pour afficher les streams en cours.', loading_channels: 'Chargement de vos chaînes...', loading_top: 'Chargement du Top...', err_loading: 'Erreur lors du chargement.', no_live: 'Aucune chaîne en live pour le moment.', session_expired: 'Session expirée. Veuillez vous reconnecter.', top_fr: '🇫🇷 FR', top_world: '🌍 Monde' },
-        en: { title: 'Watch Twitch No Sub', tab_discovery: '🌟 Discovery', tab_id: 'Link / ID', tab_streamer: 'Streamer', mobile_title: '📱 Mobile Mode', mobile_desc: 'Tip: use Outplayer, VLC or Infuse.', ph_id: 'VOD ID or Link', btn_unlock: 'Unlock', ph_streamer: 'Streamer + Word (Ex: shroud horror)', btn_search: '🔍 Search', status_ready: 'Ready.', lbl_quality: 'Quality:', btn_pip: '📺 Toggle PiP', btn_dl: '📥 Download (File)', lbl_link: 'External Link:', btn_copy: 'Copy', err_missing: 'Name missing.', loading: 'Loading...', live_on: 'LIVE NOW', btn_watch_live: '▶️ Watch Live', no_vod: 'No VODs found.', vods_found: 'VODs found.', err_network: 'Network error.', err_live: 'Live error.', loading_vod: 'Loading VOD...', vod_ready: 'VOD Playing!', err_conn: 'Connection error.', copied: 'Link copied!', offline: 'OFFLINE', offline_since: 'Offline since: ', day: 'd', hour: 'h', min: 'min', lbl_vod_history: 'Recently watched VODs:', lbl_channel_history: 'Recent Streamers:', btn_clear: 'Clear', not_found: '❌ Streamer not found.', offline_msg: 'Stream is offline.', followed_channels: '💜 Followed Channels', top_streams: '🔥 Top Streams', btn_refresh: '🔄 Refresh', btn_logout: 'Logout', login_prompt: 'Log in to easily find your favorite channels and sync your history.', btn_login_twitch: '🟣 Log in with Twitch', login_required: 'Please log in to view live streams.', loading_channels: 'Loading your channels...', loading_top: 'Loading Top...', err_loading: 'Error loading data.', no_live: 'No live channels at the moment.', session_expired: 'Session expired. Please log in again.', top_fr: '🇫🇷 FR', top_world: '🌍 World' },
-        es: { title: 'Ver Twitch sin Sub', tab_discovery: '🌟 Descubrir', tab_id: 'Enlace / ID', tab_streamer: 'Streamer', mobile_title: '📱 Modo Móvil', mobile_desc: 'Consejo: usa Outplayer, VLC o Infuse.', ph_id: 'ID o Enlace VOD', btn_unlock: 'Desbloquear', ph_streamer: 'Streamer + Palabra (Ej: ibai horror)', btn_search: '🔍 Buscar', status_ready: 'Listo.', lbl_quality: 'Calidad:', btn_pip: '📺 Modo PiP', btn_dl: '📥 Descargar', lbl_link: 'Enlace externo:', btn_copy: 'Copiar', err_missing: 'Falta el nombre.', loading: 'Cargando...', live_on: 'EN VIVO', btn_watch_live: '▶️ Ver Directo', no_vod: 'No se encontraron VODs.', vods_found: 'VODs encontrados.', err_network: 'Error de red.', err_live: 'Error de directo.', loading_vod: 'Cargando VOD...', vod_ready: 'VOD Reproduciendo!', err_conn: 'Error de conexión.', copied: 'Enlace copiado!', offline: 'DESCONECTADO', offline_since: 'Desconectado desde: ', day: 'd', hour: 'h', min: 'min', lbl_vod_history: 'VODs recientes:', lbl_channel_history: 'Streamers recientes:', btn_clear: 'Borrar', not_found: '❌ Streamer no encontrado.', offline_msg: 'No hay directo en curso.', followed_channels: '💜 Canales Seguidos', top_streams: '🔥 Top Streams', btn_refresh: '🔄 Actualizar', btn_logout: 'Cerrar sesión', login_prompt: 'Inicia sesión para encontrar tus canales favoritos y sincronizar tu historial.', btn_login_twitch: '🟣 Iniciar sesión con Twitch', login_required: 'Inicia sesión para ver los streams.', loading_channels: 'Cargando tus canales...', loading_top: 'Cargando Top...', err_loading: 'Error al cargar.', no_live: 'No hay canales en vivo ahora.', session_expired: 'Sesión expirada. Inicia sesión de nuevo.', top_fr: '🇫🇷 FR', top_world: '🌍 Mundo' },
+        fr: { title: 'Regarder Twitch sans Sub', tab_discovery: '🌟 Découverte', tab_id: 'Lien / ID', tab_vod: '📼 VOD', tab_streamer: 'Streamer', mobile_title: '📱 Mode Mobile', mobile_desc: 'Astuce : utilisez Outplayer, VLC ou Infuse.', ph_id: 'ID ou Lien de la VOD', btn_unlock: 'Déverrouiller', ph_streamer: 'Streamer + Mot (Ex: squeezie horreur)', btn_search: '🔍 Chercher', status_ready: 'Prêt.', lbl_quality: 'Qualité :', btn_pip: '📺 Activer PiP', btn_dl: '📥 Fichier M3U8', lbl_link: 'Lien externe :', btn_copy: 'Copier', err_missing: 'Nom manquant.', loading: 'Chargement...', live_on: 'EN DIRECT', btn_watch_live: '▶️ Regarder le Live', no_vod: 'Aucune VOD trouvée.', vods_found: 'VODs trouvées.', err_network: 'Erreur réseau.', err_live: 'Erreur Live.', loading_vod: 'Lancement VOD...', vod_ready: 'VOD en lecture !', err_conn: 'Erreur connexion.', copied: 'Lien copié !', offline: 'HORS LIGNE', offline_since: 'Hors ligne depuis : ', day: 'j', hour: 'h', min: 'min', lbl_vod_history: 'VODs récemment regardées :', lbl_channel_history: 'Streamers récents :', btn_clear: 'Effacer', not_found: '❌ Streamer introuvable.', offline_msg: 'Pas de stream en cours.', followed_channels: '💜 Vos Chaînes Suivies', top_streams: '🔥 Top Streams', btn_refresh: '🔄 Actualiser', btn_logout: 'Déconnexion', login_prompt: 'Connectez-vous pour retrouver facilement vos chaînes préférées et synchroniser votre historique.', btn_login_twitch: '🟣 Se connecter avec Twitch', login_required: 'Veuillez vous connecter pour afficher les streams en cours.', loading_channels: 'Chargement de vos chaînes...', loading_top: 'Chargement du Top...', err_loading: 'Erreur lors du chargement.', no_live: 'Aucune chaîne en live pour le moment.', session_expired: 'Session expirée. Veuillez vous reconnecter.', top_fr: '🇫🇷 FR', top_world: '🌍 Monde' },
+        en: { title: 'Watch Twitch No Sub', tab_discovery: '🌟 Discovery', tab_id: 'Link / ID', tab_vod: '📼 VOD', tab_streamer: 'Streamer', mobile_title: '📱 Mobile Mode', mobile_desc: 'Tip: use Outplayer, VLC or Infuse.', ph_id: 'VOD ID or Link', btn_unlock: 'Unlock', ph_streamer: 'Streamer + Word (Ex: shroud horror)', btn_search: '🔍 Search', status_ready: 'Ready.', lbl_quality: 'Quality:', btn_pip: '📺 Toggle PiP', btn_dl: '📥 Download (File)', lbl_link: 'External Link:', btn_copy: 'Copy', err_missing: 'Name missing.', loading: 'Loading...', live_on: 'LIVE NOW', btn_watch_live: '▶️ Watch Live', no_vod: 'No VODs found.', vods_found: 'VODs found.', err_network: 'Network error.', err_live: 'Live error.', loading_vod: 'Loading VOD...', vod_ready: 'VOD Playing!', err_conn: 'Connection error.', copied: 'Link copied!', offline: 'OFFLINE', offline_since: 'Offline since: ', day: 'd', hour: 'h', min: 'min', lbl_vod_history: 'Recently watched VODs:', lbl_channel_history: 'Recent Streamers:', btn_clear: 'Clear', not_found: '❌ Streamer not found.', offline_msg: 'Stream is offline.', followed_channels: '💜 Followed Channels', top_streams: '🔥 Top Streams', btn_refresh: '🔄 Refresh', btn_logout: 'Logout', login_prompt: 'Log in to easily find your favorite channels and sync your history.', btn_login_twitch: '🟣 Log in with Twitch', login_required: 'Please log in to view live streams.', loading_channels: 'Loading your channels...', loading_top: 'Loading Top...', err_loading: 'Error loading data.', no_live: 'No live channels at the moment.', session_expired: 'Session expired. Please log in again.', top_fr: '🇫🇷 FR', top_world: '🌍 World' },
+        es: { title: 'Ver Twitch sin Sub', tab_discovery: '🌟 Descubrir', tab_id: 'Enlace / ID', tab_vod: '📼 VOD', tab_streamer: 'Streamer', mobile_title: '📱 Modo Móvil', mobile_desc: 'Consejo: usa Outplayer, VLC o Infuse.', ph_id: 'ID o Enlace VOD', btn_unlock: 'Desbloquear', ph_streamer: 'Streamer + Palabra (Ej: ibai horror)', btn_search: '🔍 Buscar', status_ready: 'Listo.', lbl_quality: 'Calidad:', btn_pip: '📺 Modo PiP', btn_dl: '📥 Descargar', lbl_link: 'Enlace externo:', btn_copy: 'Copiar', err_missing: 'Falta el nombre.', loading: 'Cargando...', live_on: 'EN VIVO', btn_watch_live: '▶️ Ver Directo', no_vod: 'No se encontraron VODs.', vods_found: 'VODs encontrados.', err_network: 'Error de red.', err_live: 'Error de directo.', loading_vod: 'Cargando VOD...', vod_ready: 'VOD Reproduciendo!', err_conn: 'Error de conexión.', copied: 'Enlace copiado!', offline: 'DESCONECTADO', offline_since: 'Desconectado desde: ', day: 'd', hour: 'h', min: 'min', lbl_vod_history: 'VODs recientes:', lbl_channel_history: 'Streamers recientes:', btn_clear: 'Borrar', not_found: '❌ Streamer no encontrado.', offline_msg: 'No hay directo en curso.', followed_channels: '💜 Canales Seguidos', top_streams: '🔥 Top Streams', btn_refresh: '🔄 Actualizar', btn_logout: 'Cerrar sesión', login_prompt: 'Inicia sesión para encontrar tus canales favoritos y sincronizar tu historial.', btn_login_twitch: '🟣 Iniciar sesión con Twitch', login_required: 'Inicia sesión para ver los streams.', loading_channels: 'Cargando tus canales...', loading_top: 'Cargando Top...', err_loading: 'Error al cargar.', no_live: 'No hay canales en vivo ahora.', session_expired: 'Sesión expirada. Inicia sesión de nuevo.', top_fr: '🇫🇷 FR', top_world: '🌍 Mundo' },
       };
 
       let currentLang: string = 'fr';
@@ -215,15 +233,57 @@ export default function FreetchPage() {
         status: $('status-msg') as HTMLElement,
         vodList: $('vod-list') as HTMLElement,
         videoContainer: $('video-container') as HTMLElement,
-        optionsBar: $('options-bar') as HTMLElement,
-        vlcSection: $('vlc-section') as HTMLElement,
-        qualitySelect: $('qualitySelect') as HTMLSelectElement,
-        vlcInput: $('vlcLink') as HTMLInputElement,
         liveArea: $('live-area') as HTMLElement,
         langSelect: $('langSelect') as HTMLSelectElement,
       };
+      let currentQuality = '';
+
+      function qualityLabel(q: string) { return q.toUpperCase().replace('CHUNKED', 'SOURCE'); }
+
+      function buildQualityMenu(links: Record<string, string>) {
+        const menu = $('quality-menu') as HTMLElement | null;
+        if (!menu) return;
+        menu.innerHTML = '';
+        Object.keys(links).forEach((q) => {
+          const item = document.createElement('div');
+          item.className = 'quality-item' + (q === currentQuality ? ' active' : '');
+          item.dataset.quality = q;
+          item.textContent = qualityLabel(q);
+          item.onclick = (e) => {
+            e.stopPropagation();
+            currentQuality = q;
+            menu.classList.remove('active');
+            changeQuality();
+            updateQualityUI();
+          };
+          menu.appendChild(item);
+        });
+      }
+
+      function updateQualityUI() {
+        const display = $('quality-current') as HTMLElement | null;
+        if (display) display.textContent = qualityLabel(currentQuality);
+        const menu = $('quality-menu') as HTMLElement | null;
+        if (menu) menu.querySelectorAll('.quality-item').forEach((it) => {
+          it.classList.toggle('active', (it as HTMLElement).dataset.quality === currentQuality);
+        });
+      }
 
       function txt(key: string) { return translations[currentLang][key] || key; }
+      function setStreamTitle(title: string | null, streamer?: string | null, game?: string | null, isLive?: boolean) {
+        const bar = $('stream-title-bar') as HTMLElement | null;
+        const titleEl = $('stream-title') as HTMLElement | null;
+        const metaEl = $('stream-meta') as HTMLElement | null;
+        if (!bar || !titleEl || !metaEl) return;
+        if (!title) { bar.classList.remove('active'); titleEl.textContent = ''; metaEl.innerHTML = ''; return; }
+        bar.classList.add('active');
+        titleEl.textContent = title;
+        const parts: string[] = [];
+        if (isLive) parts.push('<span class="live-tag">EN DIRECT</span>');
+        if (streamer) parts.push(`<span class="streamer-name">${streamer}</span>`);
+        if (game) parts.push(`<span class="game-name">${game}</span>`);
+        metaEl.innerHTML = parts.join('');
+      }
       function setStatus(msgKey: string, type?: string) {
         elementsCache.status.textContent = translations[currentLang][msgKey] || msgKey;
         elementsCache.status.className = type ? 'status-' + type : '';
@@ -460,7 +520,7 @@ export default function FreetchPage() {
             const thumb = item.thumb || 'https://vod-secure.twitch.tv/_404/404_processing_320x180.png';
             const streamer = item.streamer || 'VOD';
             div.innerHTML = `<img src="${thumb}" class="history-vod-thumb"><div class="history-vod-info"><div class="history-vod-title">${item.display}</div><div class="history-vod-streamer">${streamer}</div></div><div class="delete-item-btn" data-action="del-history" data-term="${item.term}">✖</div>`;
-            div.onclick = () => { ($('vodInput') as HTMLInputElement).value = item.term; fetchAndPlayVod(item.term, item.display, item.thumb, item.streamer); };
+            div.onclick = () => { fetchAndPlayVod(item.term, item.display, item.thumb, item.streamer); };
             elements.vodHistoryList.appendChild(div);
           });
         } else { elements.vodHistoryContainer.style.display = 'none'; }
@@ -495,9 +555,7 @@ export default function FreetchPage() {
           if (($('discovery-followed') as HTMLElement).innerHTML === '') loadDiscovery();
         } else {
           (root.querySelector('.tabs .tab-btn:nth-child(2)') as HTMLElement).classList.add('active');
-          ($('tab-direct') as HTMLElement).classList.add('active');
-          elementsCache.vodList.style.display = 'none';
-          elementsCache.liveArea.innerHTML = '';
+          ($('tab-vod') as HTMLElement).classList.add('active');
         }
       }
 
@@ -544,6 +602,8 @@ export default function FreetchPage() {
           }
 
           if (dataVods.error) { setStatus('no_vod', 'error'); } else {
+            const vodEmpty = $('vod-empty') as HTMLElement | null;
+            if (vodEmpty) vodEmpty.style.display = 'none';
             elementsCache.vodList.innerHTML = '';
             elementsCache.vodList.style.display = 'grid';
             let displayedCount = 0;
@@ -581,7 +641,10 @@ export default function FreetchPage() {
             chatPanel.innerHTML = `<iframe src="https://www.twitch.tv/embed/${channelName}/chat?parent=${domain}&darkpopout" frameborder="0" scrolling="no"></iframe>`;
             chatPanel.classList.add('active');
           }
-          currentVodId = null; setupPlayer(data.links); setStatus('Live: ' + data.title, 'success'); scrollToPlayer();
+          currentVodId = null; setupPlayer(data.links);
+          setStreamTitle(data.title || channelName, channelName, data.game, true);
+          setStatus('vod_ready', 'success');
+          scrollToPlayer();
         } catch (e) { setStatus('err_live', 'error'); }
       }
 
@@ -594,13 +657,15 @@ export default function FreetchPage() {
           const chatPanel = $('chat-side-panel') as HTMLElement | null;
           if (chatPanel) { chatPanel.innerHTML = ''; chatPanel.classList.remove('active'); }
           saveToHistory(id, 'vod', title || `VOD ${id}`, { thumb, streamer });
-          currentVodId = id; isNewVodLoad = true; setupPlayer(data.links); setStatus(title ? title : 'vod_ready', 'success'); scrollToPlayer();
+          currentVodId = id; isNewVodLoad = true; setupPlayer(data.links);
+          setStreamTitle(title || `VOD ${id}`, streamer, null, false);
+          setStatus('vod_ready', 'success');
+          scrollToPlayer();
         } catch (e) { setStatus('err_conn', 'error'); }
       }
 
-      async function searchVodById() {
-        const rawInput = ($('vodInput') as HTMLInputElement).value;
-        const id = (rawInput.match(/\d{8,}/) || [])[0];
+      async function playVodById(rawId: string) {
+        const id = (rawId.match(/\d{8,}/) || [])[0];
         if (!id) return setStatus('ID invalide', 'error');
         setStatus('loading_vod', 'loading');
         let title: string | null = null, thumb: string | null = null, streamer: string | null = null;
@@ -619,20 +684,19 @@ export default function FreetchPage() {
       function scrollToPlayer() { ($('video-container') as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
       function setupPlayer(links: Record<string, string>) {
-        currentLinks = links; elementsCache.qualitySelect.innerHTML = '';
-        for (const [q] of Object.entries(links)) {
-          const opt = document.createElement('option'); opt.value = q; opt.textContent = q.toUpperCase().replace('CHUNKED', 'SOURCE');
-          elementsCache.qualitySelect.appendChild(opt);
-        }
-        elementsCache.optionsBar.style.display = 'flex';
+        currentLinks = links;
+        const keys = Object.keys(links);
+        currentQuality = keys[0] || '';
+        buildQualityMenu(links);
+        updateQualityUI();
         elementsCache.videoContainer.style.display = 'block';
-        elementsCache.vlcSection.style.display = 'flex';
+        const qctrl = $('quality-control') as HTMLElement | null;
+        if (qctrl) qctrl.style.display = 'block';
         changeQuality();
       }
 
       function changeQuality() {
-        const rawUrl = currentLinks[elementsCache.qualitySelect.value]; if (!rawUrl) return;
-        elementsCache.vlcInput.value = rawUrl;
+        const rawUrl = currentLinks[currentQuality]; if (!rawUrl) return;
         const video = $('freetch-player') as HTMLVideoElement;
         let timeToRestore = isNewVodLoad ? 0 : video.currentTime;
         if (isNewVodLoad && currentVodId) {
@@ -655,45 +719,16 @@ export default function FreetchPage() {
       }
 
       function hidePlayer() {
-        elementsCache.optionsBar.style.display = 'none';
         elementsCache.videoContainer.style.display = 'none';
-        elementsCache.vlcSection.style.display = 'none';
+        const qctrl = $('quality-control') as HTMLElement | null;
+        if (qctrl) qctrl.style.display = 'none';
+        const qmenu = $('quality-menu') as HTMLElement | null;
+        if (qmenu) qmenu.classList.remove('active');
+        setStreamTitle(null);
         if (hls) hls.destroy();
         if (player) player.stop();
         const chatPanel = $('chat-side-panel') as HTMLElement | null;
         if (chatPanel) { chatPanel.innerHTML = ''; chatPanel.classList.remove('active'); }
-      }
-
-      function togglePiP() {
-        const v = $('freetch-player') as any;
-        if (v.webkitSupportsPresentationMode && typeof v.webkitSetPresentationMode === 'function') {
-          v.webkitSetPresentationMode(v.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture');
-        } else if ((document as any).pictureInPictureEnabled) {
-          (document as any).pictureInPictureElement ? (document as any).exitPictureInPicture() : v.requestPictureInPicture();
-        } else {
-          alert("Le mode PiP est bloqué par iOS dans ce mode. Mettez la vidéo en plein écran et utilisez l'icône PiP native d'Apple en haut à gauche !");
-        }
-      }
-
-      function downloadM3U8() {
-        const l = document.createElement('a');
-        l.href = URL.createObjectURL(new Blob([`#EXTM3U\n#EXTINF:-1,Twitch\n${elementsCache.vlcInput.value}`], { type: 'audio/x-mpegurl' }));
-        l.download = 'video.m3u'; l.click();
-      }
-
-      function copyLink() {
-        elementsCache.vlcInput.select();
-        navigator.clipboard.writeText(elementsCache.vlcInput.value);
-        alert(txt('copied'));
-      }
-
-      function openInVLC_Mobile() { window.location.href = 'vlc://' + elementsCache.vlcInput.value; }
-      function openInOutplayer() { window.location.href = 'outplayer://' + elementsCache.vlcInput.value; }
-      function openInInfuse() {
-        let targetName = ($('channelInput') as HTMLInputElement).value.trim().split(' ')[0] || ($('vodInput') as HTMLInputElement).value.trim() || 'Twitch_Live';
-        targetName = targetName.replace(/[^a-zA-Z0-9]/g, '_');
-        const cleanUrl = elementsCache.vlcInput.value.replace('/api/proxy', `/api/proxy/${targetName}.m3u8`);
-        window.location.href = 'infuse://x-callback-url/play?url=' + encodeURIComponent(cleanUrl);
       }
 
       function setupAutocomplete() {
@@ -773,28 +808,27 @@ export default function FreetchPage() {
       (elementsCache.langSelect as HTMLSelectElement).addEventListener('change', (e) => setLanguage((e.target as HTMLSelectElement).value));
       (root.querySelectorAll('.tabs > .tab-btn')[0] as HTMLElement).addEventListener('click', () => switchTab('discovery'));
       (root.querySelectorAll('.tabs > .tab-btn')[1] as HTMLElement).addEventListener('click', () => switchTab('direct'));
-      ($('btn-search-vod') as HTMLElement).addEventListener('click', () => searchVodById());
       ($('btn-top-fr') as HTMLElement).addEventListener('click', () => loadTopStreams('fr'));
       ($('btn-top-world') as HTMLElement).addEventListener('click', () => loadTopStreams('all'));
-      (elementsCache.qualitySelect as HTMLSelectElement).addEventListener('change', changeQuality);
-      ($('btn-pip') as HTMLElement).addEventListener('click', togglePiP);
-      ($('btn-dl') as HTMLElement).addEventListener('click', downloadM3U8);
-      ($('btn-copy') as HTMLElement).addEventListener('click', copyLink);
-      ($('btn-out-1') as HTMLElement).addEventListener('click', openInOutplayer);
-      ($('btn-vlc-1') as HTMLElement).addEventListener('click', openInVLC_Mobile);
-      ($('btn-inf-1') as HTMLElement).addEventListener('click', openInInfuse);
-      ($('btn-out-2') as HTMLElement).addEventListener('click', openInOutplayer);
-      ($('btn-vlc-2') as HTMLElement).addEventListener('click', openInVLC_Mobile);
-      ($('btn-inf-2') as HTMLElement).addEventListener('click', openInInfuse);
+
+      const qBtn = $('quality-btn');
+      const qMenu = $('quality-menu');
+      if (qBtn && qMenu) {
+        qBtn.addEventListener('click', (e) => { e.stopPropagation(); qMenu.classList.toggle('active'); });
+      }
+      const onDocClickQuality = (e: Event) => {
+        if (!qMenu || !qMenu.classList.contains('active')) return;
+        const target = e.target as Node;
+        if (qMenu.contains(target) || (qBtn && qBtn.contains(target))) return;
+        qMenu.classList.remove('active');
+      };
+      document.addEventListener('click', onDocClickQuality);
 
       ($('channelInput') as HTMLInputElement).addEventListener('keydown', (e) => {
         if ((e as KeyboardEvent).key === 'Enter') {
           searchStreamer();
           ($('autocomplete-box') as HTMLElement).style.display = 'none';
         }
-      });
-      ($('vodInput') as HTMLInputElement).addEventListener('keydown', (e) => {
-        if ((e as KeyboardEvent).key === 'Enter') searchVodById();
       });
 
       // Popup auth message handler
@@ -836,17 +870,13 @@ export default function FreetchPage() {
       renderHistory();
 
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('id')) { ($('vodInput') as HTMLInputElement).value = urlParams.get('id')!; switchTab('direct'); searchVodById(); }
+      if (urlParams.get('id')) { playVodById(urlParams.get('id')!); }
       else if (urlParams.get('channel')) { ($('channelInput') as HTMLInputElement).value = urlParams.get('channel')!; switchTab('discovery'); searchStreamer(true); }
       else { switchTab('discovery'); }
 
-      if (/Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        root.querySelectorAll('.mobile-only').forEach((el) => ((el as HTMLElement).style.display = 'block'));
-      }
-
       cleanup = () => {
         window.removeEventListener('message', onMessage);
-        document.removeEventListener('click', () => {});
+        document.removeEventListener('click', onDocClickQuality);
         root.removeEventListener('click', onRootClick);
         try { if (hls) hls.destroy(); } catch (e) { /* */ }
         try { if (player) player.destroy(); } catch (e) { /* */ }
@@ -906,16 +936,7 @@ export default function FreetchPage() {
 
           <div className="tabs">
             <button className="tab-btn active" data-lang="tab_discovery">🌟 Découverte</button>
-            <button className="tab-btn" data-lang="tab_id">Lien / ID</button>
-          </div>
-
-          <div id="mobile-alert" className="mobile-only">
-            <strong data-lang="mobile_title">📱 Mode Mobile</strong> <span data-lang="mobile_desc">Astuce : utilisez Outplayer, VLC ou Infuse.</span>
-            <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-              <button id="btn-out-1" className="btn-secondary" style={{ background: 'var(--outplayer)', flex: 1 }}>Outplayer</button>
-              <button id="btn-vlc-1" className="btn-secondary" style={{ background: 'var(--vlc)', flex: 1 }}>VLC</button>
-              <button id="btn-inf-1" className="btn-secondary" style={{ background: 'var(--infuse)', flex: 1 }}>Infuse</button>
-            </div>
+            <button className="tab-btn" data-lang="tab_vod">📼 VOD</button>
           </div>
 
           <div id="vod-history-container">
@@ -927,23 +948,17 @@ export default function FreetchPage() {
 
           <div id="video-container">
             <video id="freetch-player" playsInline controls crossOrigin="anonymous"></video>
-          </div>
-
-          <div id="options-bar">
-            <label data-lang="lbl_quality">Qualité :</label>
-            <select id="qualitySelect"></select>
-            <button id="btn-pip" className="btn-secondary" style={{ backgroundColor: '#e6e619', color: 'black' }} data-lang="btn_pip">📺 Activer PiP</button>
-            <button id="btn-dl" className="btn-secondary" data-lang="btn_dl">📥 Fichier M3U8</button>
-          </div>
-          <div id="vlc-section" className="vlc-section">
-            <div style={{ fontSize: '0.8rem', color: '#aaa' }} data-lang="lbl_link">Lien externe :</div>
-            <input type="text" id="vlcLink" className="vlc-link" readOnly onClick={(e) => (e.target as HTMLInputElement).select()} />
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button id="btn-copy" className="btn-secondary" style={{ flex: 1 }} data-lang="btn_copy">Copier</button>
-              <button id="btn-out-2" className="btn-secondary mobile-only" style={{ background: 'var(--outplayer)', flex: 1 }}>Outplayer</button>
-              <button id="btn-vlc-2" className="btn-secondary mobile-only" style={{ background: 'var(--vlc)', flex: 1 }}>VLC</button>
-              <button id="btn-inf-2" className="btn-secondary mobile-only" style={{ background: 'var(--infuse)', flex: 1 }}>Infuse</button>
+            <div id="quality-control" style={{ display: 'none' }}>
+              <button id="quality-btn" type="button">
+                <span id="quality-current">Auto</span>
+                <span style={{ opacity: 0.7, fontSize: '0.7rem' }}>▾</span>
+              </button>
+              <div id="quality-menu"></div>
             </div>
+          </div>
+          <div id="stream-title-bar">
+            <h2 id="stream-title"></h2>
+            <div className="stream-meta" id="stream-meta"></div>
           </div>
 
           <div id="tab-discovery" className="tab-content active">
@@ -962,14 +977,11 @@ export default function FreetchPage() {
             </div>
             <div id="discovery-top" className="stream-grid"></div>
             <div id="live-area"></div>
-            <div id="vod-list"></div>
           </div>
 
-          <div id="tab-direct" className="tab-content">
-            <div className="search-bar">
-              <input type="text" id="vodInput" placeholder="ID ou Lien de la VOD" data-placeholder="ph_id" />
-              <button id="btn-search-vod" className="btn-primary" data-lang="btn_unlock">Déverrouiller</button>
-            </div>
+          <div id="tab-vod" className="tab-content">
+            <div id="vod-empty" className="freetch-sidebar-empty" style={{ padding: 40 }}>Recherche un streamer ci-dessus pour voir ses VODs ici.</div>
+            <div id="vod-list"></div>
           </div>
         </div>
           </main>
