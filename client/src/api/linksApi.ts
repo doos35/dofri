@@ -217,3 +217,8 @@ export async function togglePinDiscussion(id: string): Promise<Discussion> {
   const { data } = await api.patch<Discussion>(`/discussions/${id}/pin`);
   return data;
 }
+
+export async function revokeAllOtherSessions(): Promise<{ token: string; username: string }> {
+  const { data } = await api.post<{ token: string; username: string }>('/auth/revoke-all');
+  return data;
+}

@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { AuthConfigModel } from '../db/models';
 
 export interface AuthRequest extends Request {
-  user?: { username: string; jti?: string; exp?: number };
+  user?: { username: string; jti?: string; exp?: number; v?: number };
 }
 
 /**
@@ -29,6 +30,32 @@ export function isRevoked(jti: string | undefined): boolean {
   return jti != null && revoked.has(jti);
 }
 
+const AUTH_KEY = 'admin';
+let tokenVersion = 0;
+
+export async function initAuthConfig(): Promise<void> {
+  const doc = await AuthConfigModel.findOneAndUpdate(
+    { key: AUTH_KEY },
+    { $setOnInsert: { key: AUTH_KEY, tokenVersion: 0 } },
+    { upsert: true, new: true }
+  );
+  tokenVersion = doc.tokenVersion;
+}
+
+export function getTokenVersion(): number {
+  return tokenVersion;
+}
+
+export async function bumpTokenVersion(): Promise<number> {
+  const doc = await AuthConfigModel.findOneAndUpdate(
+    { key: AUTH_KEY },
+    { $inc: { tokenVersion: 1 } },
+    { upsert: true, new: true }
+  );
+  tokenVersion = doc.tokenVersion;
+  return tokenVersion;
+}
+
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
 
@@ -40,9 +67,13 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   const token = header.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { username: string; jti?: string; exp?: number };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { username: string; jti?: string; exp?: number; v?: number };
     if (isRevoked(decoded.jti)) {
       res.status(401).json({ error: 'Token révoqué' });
+      return;
+    }
+    if ((decoded.v ?? 0) !== tokenVersion) {
+      res.status(401).json({ error: 'Session expirée — connexion révoquée à distance' });
       return;
     }
     req.user = decoded;

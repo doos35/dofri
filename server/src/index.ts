@@ -5,6 +5,7 @@ import axios from 'axios';
 import cron from 'node-cron';
 import { connectDB } from './db/connection';
 import { startHealthCheckCron } from './services/healthChecker';
+import { initAuthConfig } from './middleware/auth';
 
 // Vérifier les variables d'environnement critiques au démarrage
 const requiredEnvVars = ['JWT_SECRET', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'MONGODB_URI'];
@@ -37,6 +38,7 @@ function startKeepAlivePing(): void {
 }
 
 connectDB()
+  .then(() => initAuthConfig())
   .then(() => {
     app.listen(PORT, () => {
       console.log(`[Server] Démarré sur http://localhost:${PORT}`);

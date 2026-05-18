@@ -3,7 +3,7 @@ import SEO from '../components/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, Edit3, RefreshCw, ExternalLink, Search,
-  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical, Megaphone, Camera
+  Wifi, WifiOff, AlertTriangle, BarChart3, Globe, Star, MousePointerClick, Bell, ChevronDown, Upload, GripVertical, Megaphone, Camera, LogOut
 } from 'lucide-react';
 import { Link as LinkType, HealthStatus, RatingSummary, CreateLinkDTO, UpdateLinkDTO } from '../types';
 import * as api from '../api/linksApi';
@@ -33,6 +33,8 @@ export default function AdminPage() {
   const [showManageNotifs, setShowManageNotifs] = useState(false);
   const [generatingScreenshots, setGeneratingScreenshots] = useState(false);
   const [screenshotResult, setScreenshotResult] = useState<string | null>(null);
+  const [revokingSessions, setRevokingSessions] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
@@ -97,6 +99,20 @@ export default function AdminPage() {
       console.error('Health check failed:', err);
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleRevokeOtherSessions = async () => {
+    setRevokingSessions(true);
+    try {
+      const { token } = await api.revokeAllOtherSessions();
+      localStorage.setItem('lp_token', token);
+      setConfirmRevoke(false);
+      setScreenshotResult('Toutes les autres sessions ont été déconnectées.');
+    } catch {
+      setScreenshotResult('Erreur lors de la révocation des sessions.');
+    } finally {
+      setRevokingSessions(false);
     }
   };
 
@@ -321,6 +337,15 @@ export default function AdminPage() {
               <span className="hidden sm:inline">{generatingScreenshots ? 'Génération...' : 'Aperçus'}</span>
             </button>
             <button
+              onClick={() => setConfirmRevoke(true)}
+              disabled={revokingSessions}
+              className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all disabled:opacity-50 text-sm"
+              title="Déconnecter le compte admin de tous les autres appareils"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">{revokingSessions ? 'Révocation...' : 'Autres appareils'}</span>
+            </button>
+            <button
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-2 px-3 sm:px-5 py-2.5 gradient-bg text-white font-medium rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-purple-500/20 text-sm"
             >
@@ -522,6 +547,29 @@ export default function AdminPage() {
           <button
             onClick={() => setDeleteConfirm(null)}
             className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            Annuler
+          </button>
+        </div>
+      </Modal>
+
+      {/* Revoke Other Sessions Confirm Modal */}
+      <Modal isOpen={confirmRevoke} onClose={() => setConfirmRevoke(false)} title="Déconnecter les autres appareils">
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Tous les appareils connectés au compte admin seront déconnectés immédiatement, sauf celui-ci. Vous garderez votre session active.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={handleRevokeOtherSessions}
+            disabled={revokingSessions}
+            className="flex-1 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {revokingSessions ? 'Révocation...' : 'Déconnecter les autres'}
+          </button>
+          <button
+            onClick={() => setConfirmRevoke(false)}
+            disabled={revokingSessions}
+            className="flex-1 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
           >
             Annuler
           </button>

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
-import { requireAuth, AuthRequest, revokeJti } from '../middleware/auth';
+import { requireAuth, AuthRequest, revokeJti, getTokenVersion, bumpTokenVersion } from '../middleware/auth';
 
 const router = Router();
 
@@ -43,9 +43,20 @@ router.post('/login', loginLimiter, (req: Request, res: Response) => {
   }
 
   const jti = crypto.randomUUID();
-  const token = jwt.sign({ username }, process.env.JWT_SECRET!, { expiresIn: '8h', jwtid: jti });
+  const token = jwt.sign({ username, v: getTokenVersion() }, process.env.JWT_SECRET!, { expiresIn: '8h', jwtid: jti });
 
   res.json({ token, username });
+});
+
+router.post('/revoke-all', requireAuth, async (req: AuthRequest, res: Response) => {
+  const newVersion = await bumpTokenVersion();
+  const jti = crypto.randomUUID();
+  const token = jwt.sign(
+    { username: req.user!.username, v: newVersion },
+    process.env.JWT_SECRET!,
+    { expiresIn: '8h', jwtid: jti }
+  );
+  res.json({ token, username: req.user!.username });
 });
 
 router.post('/logout', requireAuth, (req: AuthRequest, res: Response) => {

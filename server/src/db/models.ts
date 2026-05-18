@@ -164,6 +164,21 @@ const messageSchema = new Schema<MessageDoc>(
 );
 messageSchema.index({ discussionId: 1, createdAt: 1 });
 
+interface AuthConfigDoc {
+  key: string;
+  tokenVersion: number;
+}
+
+const authConfigSchema = new Schema<AuthConfigDoc>(
+  {
+    key: { type: String, required: true, unique: true },
+    tokenVersion: { type: Number, default: 0 },
+  },
+  { versionKey: false }
+);
+
+export const AuthConfigModel = mongoose.model<AuthConfigDoc>('AuthConfig', authConfigSchema);
+
 export const LinkModel = mongoose.model<Link>('Link', linkSchema);
 export const HealthModel = mongoose.model<HealthStatus>('HealthStatus', healthSchema);
 export const RatingModel = mongoose.model<RatingDoc>('Rating', ratingSchema);
