@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Home, LogIn, LogOut, Sun, Moon, MessageCircle, Sparkles, Tag, Tv, Menu, X } from 'lucide-react';
+import { Settings, Home, LogOut, Sun, Moon, MessageCircle, Sparkles, Tag, Tv, Menu, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -22,12 +22,37 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdmin = location.pathname === '/admin';
-  const isLogin = location.pathname === '/login';
   const isDiscussions = location.pathname.startsWith('/discussions');
   const isFreetch = location.pathname === '/freetch';
   const isPromo = location.pathname === '/promo';
   const isStream = location.pathname === '/stream';
+  const isLogin = location.pathname === '/login';
   const isHome = !isAdmin && !isLogin && !isDiscussions && !isFreetch && !isPromo && !isStream;
+
+  // Easter egg : 5 clics/taps rapides sur le logo → page de connexion.
+  // N'apparaît plus dans la navigation publique.
+  const tapCount = useRef(0);
+  const tapTimer = useRef<number | null>(null);
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isAuthenticated) {
+      tapCount.current += 1;
+      if (tapTimer.current !== null) window.clearTimeout(tapTimer.current);
+      tapTimer.current = window.setTimeout(() => {
+        tapCount.current = 0;
+      }, 700);
+      if (tapCount.current >= 5) {
+        e.preventDefault();
+        tapCount.current = 0;
+        if (tapTimer.current !== null) window.clearTimeout(tapTimer.current);
+        navigate('/login');
+        return;
+      }
+    }
+    if (location.pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // Fermer le menu au changement de route
   useEffect(() => {
@@ -76,13 +101,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 gap-2">
           <Link
             to="/"
-            onClick={(e) => {
-              if (location.pathname === '/') {
-                e.preventDefault();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }}
-            className="flex items-center gap-2 group flex-shrink-0"
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 group flex-shrink-0 select-none"
           >
             <img
               src="/logo.png"
@@ -106,7 +126,7 @@ export default function Header() {
               </Link>
             ))}
 
-            {isAuthenticated ? (
+            {isAuthenticated && (
               <>
                 <Link to="/admin" className={linkClass(isAdmin)}>
                   <Settings className="w-4 h-4" />
@@ -122,11 +142,6 @@ export default function Header() {
                   <span>Déconnexion</span>
                 </button>
               </>
-            ) : (
-              <Link to="/login" className={linkClass(isLogin)}>
-                <LogIn className="w-4 h-4" />
-                <span>Connexion</span>
-              </Link>
             )}
 
             <NotificationBell />
@@ -204,10 +219,9 @@ export default function Header() {
                   </Link>
                 ))}
 
-                <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
-
-                {isAuthenticated ? (
+                {isAuthenticated && (
                   <>
+                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
                     <Link
                       to="/admin"
                       className={cn(
@@ -231,19 +245,6 @@ export default function Header() {
                       <span>Déconnexion</span>
                     </button>
                   </>
-                ) : (
-                  <Link
-                    to="/login"
-                    className={cn(
-                      'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200',
-                      isLogin
-                        ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    )}
-                  >
-                    <LogIn className="w-5 h-5" />
-                    <span>Connexion</span>
-                  </Link>
                 )}
               </nav>
             </motion.div>
